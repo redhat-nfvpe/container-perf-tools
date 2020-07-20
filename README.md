@@ -30,10 +30,16 @@ All the test scripts use enviroment varibles as input. There are two types of va
 to all tools. The second type is tool specific. Both are defined as name/value pair under the container env spec.
 
 The common env variables include:
-GIT_URL: this points to your github fork of this repository, or this respository if no fork
-tool: which performance test to run, essentially it is one of the tool directory name
++ GIT_URL: this points to your github fork of this repository, or this respository if no fork
++ tool: which performance test to run, essentially it is one of the tool directory name
 
 The tool specific variables will be mentioned under each tool sector.
+
+### test result log
+
+When the test is complete, to get the test result, use "oc logs" or "kubectl logs" command to examine the 
+container log. Currently there is a work in progress to kick off the test and present the test result via 
+rest API.
 
 ### uperf 
 
@@ -57,7 +63,47 @@ done
 export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
 envsubst < pod-uperf-master.yaml | oc create -f -
 ```
+uperf supports the following enviroment variableis:
++ tool: uperf
++ uperfSlave: the ip address of the worker pod
++ size: the tcp write buffer size
++ threads: number of threads 
 
 
+### cyclictest
+
+cyclictest is used to evaluate the real time kernel scheduler latency. 
+
+cyclictest supports the following enviroment variables:
++ tool: cyclictest
++ DURATION: how long the cyclictest will be run, default: 24 hours
++ DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs cyclictest will have workload balance disable
++ stress_tool: choice of false/stress-ng/rteval
++ rt_priority: which rt priority is used to run the cyclictest; default 99
+
+
+### sysjitter
+
+sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
+throughput for high speed network.
+
+sysjitter supports the following enviroment variableis:
++ RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
++ THRESHOLD_NS: default 200 ns
++ DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs sysjitter will have workload balance disabled
++ USE_TASKSET: choice of y/n; if enabled, use taskset to pin the task cpu
++ manual: choice of y/n; if enabled, don't kick off sysjitter, this is for debug purpose
+
+### testpmd
+
+testpmd is used to evaluate the system networking performance. The container expects two data ports (other than 
+the default interface) and wires the two ports together via dpdk handling. For higher performance, the testpmd 
+runs in io mode and it doesn't examine the packets and simply forwards packets from one port to another port,
+in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end 
+throughput test.
+
+testpmd supports the following enviroment variableis:
++ ring_size: ring buffer size, default 2048
++ manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
 
 
