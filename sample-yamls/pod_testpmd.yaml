@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testpmd
+  annotations:
+    k8s.v1.cni.cncf.io/networks: sriov-mlx-west,sriov-mlx-east
+spec:
+  restartPolicy: Never
+  containers:
+  - name: testpmd 
+    image: quay.io/jianzzha/perf-tools 
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: GIT_URL
+      value: https://github.com/jianzzha/container-tools.git
+    - name: tool
+      value: testpmd
+    - name: ring_size
+      value: "2048"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /dev/hugepages
+      name: hugepage
+    resources:
+      limits:
+        cpu: 4
+        hugepages-1Gi: 2Gi
+        memory: 2Gi
+      requests:
+        cpu: 4
+        hugepages-1Gi: 2Gi
+        memory: 2Gi
+  volumes:
+  - name: hugepage
+    emptyDir:
+      medium: HugePages
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+
+

@@ -1,0 +1,40 @@
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: cyclictest 
+spec:
+  restartPolicy: Never 
+  containers:
+  - name: container-perf-tools 
+    image: quay.io/jianzzha/perf-tools
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        memory: "200Mi"
+        cpu: "4"
+    env:
+    - name: tool
+      value: "cyclictest"
+    - name: DURATION
+      value: "1h"
+    - name: DISABLE_CPU_BALANCE
+      value: "y"
+      # DISABLE_CPU_BALANCE requires privileged=true
+    securityContext:
+      privileged: true
+      #capabilities:
+      #  add:
+      #    - SYS_NICE
+      #    - IPC_LOCK
+      #    - SYS_RAWIO
+
+    volumeMounts:
+    - mountPath: /dev/cpu_dma_latency
+      name: cstate
+  volumes:
+  - name: cstate
+    hostPath:
+      path: /dev/cpu_dma_latency
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""
+  

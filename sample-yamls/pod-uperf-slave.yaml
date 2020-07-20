@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: uperf-slave
+spec:
+  restartPolicy: Never
+  containers:
+  - name: uperf-master
+    image: quay.io/jianzzha/perf-tools 
+    imagePullPolicy: IfNotPresent
+    ports:
+    - containerPort: 20000
+    env:
+    - name: GIT_URL
+      value: https://github.com/jianzzha/container-tools.git
+    - name: tool
+      value: uperf
+    - name: mode 
+      value: slave 
+    securityContext:
+      privileged: true
+    resources:
+      limits:
+        cpu: 8 
+        memory: 4Gi
+      requests:
+        cpu: 8 
+        memory: 4Gi
+  nodeSelector:
+    kubernetes.io/hostname: "goblin-worker-0" 
+

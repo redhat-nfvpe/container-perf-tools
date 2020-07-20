@@ -1,0 +1,6 @@
+[rhel-8.2-realtime]
+name=Red Hat Enterprise Linux - 8.2 - Server Realtime
+baseurl=http://download.eng.bos.redhat.com/rhel-8/rel-eng/RHEL-8/RHEL-8.2.0-20200227.0/compose/RT/x86_64/os/
+enabled=1
+gpgcheck=0
+

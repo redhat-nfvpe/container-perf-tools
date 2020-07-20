@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<profile name="tcp-stream-${size}B-${threads}i">
+  <group nthreads="${threads}">
+    <transaction iterations="1">
+      <flowop type="connect" options="remotehost=${uperfSlave} protocol=tcp"/>
+    </transaction>
+    <transaction duration="${duration}">
+      <flowop type="write"  options="count=16 size=${size}"/>
+    <transaction iterations="1">
+      <flowop type="disconnect" />
+    </transaction>
+  </group>
+</profile>
+
+
