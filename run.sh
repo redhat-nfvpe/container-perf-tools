@@ -12,7 +12,7 @@ echo "######################################"
 env
 echo "######################################"
 
-[ -n "${GIT_URL}" ] || GIT_URL="https://github.com/jianzzha/container-tools.git"
+[ -n "${GIT_URL}" ] || GIT_URL="https://github.com/redhat-nfvpe/container-perf-tools.git"
 
 echo "git clone ${GIT_URL}"
 git clone ${GIT_URL} /root/container-tools
