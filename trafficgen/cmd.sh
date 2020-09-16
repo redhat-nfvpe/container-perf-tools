@@ -21,7 +21,9 @@ loss_ratio=${loss_ratio:-0.002}
 flows=${flows:-1}
 frame_size=${frame_size:-64}
 manual=${manual:-n}
- 
+
+ln -s $(which python3) /bin/python
+
 if [ "$manual" == "y" ]; then
     # do nothing
     sleep infinity
@@ -69,7 +71,7 @@ else
     ./launch-trex.sh --devices=${pci_list} --use-vlan=y
     sleep 1
     for size in $(echo ${frame_size} | sed -e 's/,/ /g'); do
-        ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
+        python3 ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
