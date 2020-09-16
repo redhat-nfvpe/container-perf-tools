@@ -63,8 +63,8 @@ done
 export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
 envsubst < pod-uperf-master.yaml | oc create -f -
 ```
-uperf supports the following enviroment variableis:
-+ tool: uperf
+uperf supports the following enviroment variables:
++ tool: uperf, run this uperf tool
 + uperfSlave: the ip address of the worker pod
 + size: the tcp write buffer size
 + threads: number of threads 
@@ -75,7 +75,7 @@ uperf supports the following enviroment variableis:
 cyclictest is used to evaluate the real time kernel scheduler latency. 
 
 cyclictest supports the following enviroment variables:
-+ tool: cyclictest
++ tool: cyclictest, run this cyclictest tool
 + DURATION: how long the cyclictest will be run, default: 24 hours
 + DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs cyclictest will have workload balance disable
 + stress_tool: choice of false/stress-ng/rteval
@@ -87,7 +87,8 @@ cyclictest supports the following enviroment variables:
 sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
 throughput for high speed network.
 
-sysjitter supports the following enviroment variableis:
+sysjitter supports the following enviroment variables:
++ tool: sysjitter, run this sysjitter tool
 + RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
 + THRESHOLD_NS: default 200 ns
 + DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs sysjitter will have workload balance disabled
@@ -102,8 +103,34 @@ runs in io mode and it doesn't examine the packets and simply forwards packets f
 in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end 
 throughput test.
 
-testpmd supports the following enviroment variableis:
+testpmd supports the following enviroment variables:
++ tool: testpmd, run this testpmd tool
 + ring_size: ring buffer size, default 2048
 + manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
 
+### trafficgen
+
+trafficgen is used to perform a binary search and find the maximum sustainable throughput. This tool expects 
+two data ports (other than the default interface) and sends the traffic out of one port and expects the traffic 
+received on the other port and vice versa. It begins at line rate and automatically adjust the traffic rate 
+for next iteration based on the packet loss ratio at last iteration until it finds a traffic rate this has 
+packet loss ratio meets the expectation.
+
+This tool supports the following enviroment variables:
++ tool: trafficgen, run this trafficgen tool
++ pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
++ validation_seconds: The final validation test duration, default 30 seconds
++ search_seconds: The test duration for each search iteration, default 10 seconds
++ sniff_seconds: The initial test duration before binary search begins, default 10 seconds
++ loss_ratio: Expected packet loss ration percentile, default 0.002
++ flows: Number of flows, default 1
++ frame_size: The packet frame size (layer 2 frame), default 64 bytes
+
+Prerequisites:
++ 2MB or 1GB huge pages
++ Isolated CPU for better performance
++ Example kargs: `default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt isolcpus=4-11`
+
+Podman run example:
+`podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e tool=trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  -e validation_seconds=10 quay.io/jianzzha/perf-tools`
 
