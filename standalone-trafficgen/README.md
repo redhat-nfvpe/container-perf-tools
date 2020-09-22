@@ -1,10 +1,10 @@
 
 # Stand-alone-trafficgen 
 
-Trafficgen with binary search capability is often used to benchmark NFV performance. So 
-it makes sense to have it seperated from the common tool set container and have its own 
+Trafficgen with binary search capability is commonly used in end-to-end NFV performance test.
+It makes sense to have the trafficgen seperated from the common tool set container and have its own 
 container image. This allows us to quickly add new capabilities to the trafficgen without 
-worrying its impact to other tools in the common tool set container.
+worrying the update impact to other tools in the common tool set container.
 
 So for the trafficgen, there are too choices,
 - This stand-alone trafficgen container. This can be used for either automation or manual
