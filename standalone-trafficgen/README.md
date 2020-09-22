@@ -7,7 +7,7 @@ container image. This allows us to quickly add new capabilities to the trafficge
 worrying its impact to other tools in the common tool set container.
 
 So for the trafficgen, there are too choices,
-- This stand along trafficgen container. This can be used for either automation or manual
+- This stand-alone trafficgen container. This can be used for either automation or manual
 test.
 - The common tool set container image. This can only be used for manual test.
 
