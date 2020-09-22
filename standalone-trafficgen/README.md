@@ -25,10 +25,11 @@ test.
 ## Podman run example for automation:
 
 ```
+# start pod with port mapping
 podman pod create -p 50051:50051 -n trafficgen
-# start trex server in the this pod
+# start trex server in this pod
 podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 --pod trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh server
-# start trafficgen grpc server in this pod
+# start grpc server in this pod
 podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modus --cpuset-cpus 4-11 --pod trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh client
 ```
 
@@ -38,17 +39,17 @@ In the automation script, start the trafficgen,
 To check the trafficgen status,
 `python client.py status`
 
-To get test result,
+To get the test result,
 `python client.py get-result`
 
 ## trafficgen client in other languages
 
 The trafficgen and client is programmed with Python. The trafficgen provides gRPC 
-interface so other programming language can be used to control the trafficgen 
+interface so other programming languages can be used to control the trafficgen 
 over gRPC.
 
 The protocol buffer is defined in rpc.proto. When there is an update to this file, to 
-generate python code,
+re-generate python code,
 `python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto`
 
 Other language have their own tool for code generation.
