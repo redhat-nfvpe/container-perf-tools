@@ -1,0 +1,58 @@
+syntax = "proto3";
+package trafficgen;
+
+service Trafficgen {
+    rpc isTrafficgenRunning(IsTrafficgenRunningParams) returns (TrafficgenRunning);
+    rpc isResultAvailable(IsResultAvailableParams) returns (ResultAvailable);
+    rpc getResult(GetResultParams) returns (Result);
+    rpc startTrafficgen(BinarySearchParams) returns (Success);
+    rpc stopTrafficgen(StopTrafficgenParams) returns (Success);
+}
+
+message IsTrafficgenRunningParams {}
+message IsResultAvailableParams {}
+message GetResultParams {}
+message StopTrafficgenParams {}
+
+message TrafficgenRunning {
+    bool isTrafficgenRunning = 1;
+}
+
+message ResultAvailable {
+    bool isResultAvailable = 1;
+}
+
+message Success {
+    bool success = 1;
+}
+
+message PortStats {
+    float tx_l1_bps = 1;
+    float tx_l2_bps = 2;
+    float tx_pps = 3;
+
+    float rx_l1_bps = 4;
+    float rx_l2_bps = 5;
+    float rx_pps = 6;
+
+    float rx_latency_minimum = 7;
+    float rx_latency_maximum = 8;
+    float rx_latency_average = 9;
+
+    string port = 10;
+}
+    
+message Result {
+    repeated PortStats stats = 1;
+}
+     
+message BinarySearchParams {
+    int32 search_runtime = 1;
+    int32 validation_runtime = 2;
+    int32 num_flows = 3;
+    string device_pairs = 4;
+    int32 frame_size = 5;
+    float max_loss_pct = 6;
+    int32 sniff_runtime= 7;
+}
+     
