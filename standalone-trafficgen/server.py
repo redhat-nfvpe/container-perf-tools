@@ -75,8 +75,6 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
             result = rpc_pb2.Result()
         return result
 
-
-
     def stopTrafficgen(self, request, context):
         return rpc_pb2.Success(success=killProcessByName("binary-search"))
 
@@ -113,7 +111,6 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
             return rpc_pb2.Success(success=True)
         else:
             return rpc_pb2.Success(success=False)
-
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
