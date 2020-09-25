@@ -23,8 +23,12 @@ if [ -z "$1" ]; then
 
 else
     if [ -z "${pci_list}" ]; then
-        echo "need env var: pci_list"
-        exit 1
+	# is this a openshift sriov pod?
+	pci_list=$(env | sed -n -r -e 's/PCIDEVICE.*=(.*)/\1/p' | tr '\n' ',')
+	if [ -z "${pci_list}" ]; then
+            echo "need env var: pci_list"
+            exit 1
+	fi
     fi
     # how many devices?
     number_of_devices=$(echo ${pci_list} | sed -e 's/,/ /g' | wc -w)
@@ -45,7 +49,7 @@ else
 
     cd /root/tgen
     if [ "$1" == "start" ]; then
-        ./launch-trex.sh --devices=${pci_list} --use-vlan=y
+        ./launch-trex.sh --devices=${pci_list}
         count=60
         num_ports=0
         while [ ${count} -gt 0 -a ${num_ports} -lt 2 ]; do
@@ -64,11 +68,12 @@ else
                 --rate-unit=% --rate=100
             done
         else
-            echo "ERROR: trex-server could not start properly. Check \'tmux attach -t trex\' and/or \'cat /tmp/trex.server.out\'"
-            sleep infinity 
+            echo "ERROR: trex-server could not start properly"
+	    cat /tmp/trex.server.out
+            exit 1
         fi
     elif [ "$1" == "server" ]; then
-        ./launch-trex.sh --devices=${pci_list} --use-vlan=y --no-tmux=y
+        ./launch-trex.sh --devices=${pci_list} --no-tmux=y
     elif [ "$1" == "client" ]; then
         num_ports=0
         while [ ${num_ports} -lt 2 ]; do

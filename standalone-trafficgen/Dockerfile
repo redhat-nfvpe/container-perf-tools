@@ -1,10 +1,9 @@
 FROM centos:7
 
 ENV TREX_VER "v2.82"
-ENV pci_list validation_seconds search_seconds sniff_seconds loss_ratio flows frame_size
 
 RUN yum -y --enablerepo=extras install epel-release dpdk dpdk-tools \
-       		pciutils \
+       		pciutils which \
        		gcc python python-devel \
        		net-tools \
        		tmux
