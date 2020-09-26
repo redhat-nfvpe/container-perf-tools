@@ -28,9 +28,9 @@ test.
 # start pod with port mapping
 podman pod create -p 50051:50051 -n trafficgen
 # start trex server in this pod
-podman run -it --rm --privileged -v /dev/hugepages:/dev/hugepages -v /lib/modules:/lib/modules --cpuset-cpus 4-11 --pod trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh server
+podman run -d --rm --privileged -v /dev/hugepages:/dev/hugepages -v /lib/modules:/lib/modules --cpuset-cpus 4-11 --pod trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh server
 # start grpc server in this pod
-podman run -it --rm --privileged --pod trafficgen  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh grpc
+podman run -d --rm --privileged --pod trafficgen  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh grpc
 ```
 
 In the automation script, start the trafficgen,
