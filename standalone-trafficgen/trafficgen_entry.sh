@@ -22,30 +22,33 @@ if [ -z "$1" ]; then
     sleep infinity
 
 else
-    if [ -z "${pci_list}" ]; then
-	# is this a openshift sriov pod?
-	pci_list=$(env | sed -n -r -e 's/PCIDEVICE.*=(.*)/\1/p' | tr '\n' ',')
-	if [ -z "${pci_list}" ]; then
-            echo "need env var: pci_list"
-            exit 1
-	fi
-    fi
-    # how many devices?
-    number_of_devices=$(echo ${pci_list} | sed -e 's/,/ /g' | wc -w)
-    if [ ${number_of_devices} -lt 2 ]; then
-        echo "need at least 2 pci devices"
-        exit 1
-    fi
-    # device_pairs in form of "0:1,2:3"
-    index=0
-    while [ ${index} -lt ${number_of_devices} ]; do
-        if [ -z ${device_pairs} ]; then
-            device_pairs="$((index)):$((index+1))"
-        else
-            device_pairs="${device_pairs},$((index)):$((index+1))"
+    # client does not need to know pci_list
+    if [ "$1" == "server" ] || [ "$1" == "start" ]; then
+        if [ -z "${pci_list}" ]; then
+        # is this a openshift sriov pod?
+            pci_list=$(env | sed -n -r -e 's/PCIDEVICE.*=(.*)/\1/p' | tr '\n' ',')
+            if [ -z "${pci_list}" ]; then
+                    echo "need env var: pci_list"
+                    exit 1
+            fi
         fi
-        ((index+=2))
-    done
+        # how many devices?
+        number_of_devices=$(echo ${pci_list} | sed -e 's/,/ /g' | wc -w)
+        if [ ${number_of_devices} -lt 2 ]; then
+            echo "need at least 2 pci devices"
+            exit 1
+        fi
+        # device_pairs in form of "0:1,2:3"
+        index=0
+        while [ ${index} -lt ${number_of_devices} ]; do
+            if [ -z ${device_pairs} ]; then
+                device_pairs="$((index)):$((index+1))"
+            else
+                device_pairs="${device_pairs},$((index)):$((index+1))"
+            fi
+            ((index+=2))
+        done
+    fi
 
     cd /root/tgen
     if [ "$1" == "start" ]; then
@@ -69,12 +72,12 @@ else
             done
         else
             echo "ERROR: trex-server could not start properly"
-	    cat /tmp/trex.server.out
+            cat /tmp/trex.server.out
             exit 1
         fi
     elif [ "$1" == "server" ]; then
         ./launch-trex.sh --devices=${pci_list} --no-tmux=y
-    elif [ "$1" == "client" ]; then
+    elif [ "$1" == "grpc" ]; then
         num_ports=0
         while [ ${num_ports} -lt 2 ]; do
             echo "Waiting for trex-server"
