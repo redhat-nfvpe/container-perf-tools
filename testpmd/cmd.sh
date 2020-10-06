@@ -48,7 +48,7 @@ if [[ -z "${pci_west}" || -z "${pci_east}" ]]; then
         exit 1
 fi
 
-vf_driver=$(ls /sys/bus/pci/devices/${pci_west}/driver/module/drivers/| sed -n -r 's/.*:(.+)/\1/p')
+vf_driver=$(ls /sys/bus/pci/devices/${pci_west}/driver/module/drivers/| sed -n -r 's/.*:(.+)/\1/p' | head -1)
 if [[ -z "${vf_driver}" ]]; then
 	echo "couldn't get driver info from /sys/bus/pci/devices/${pci_west}/driver/module/drivers/"
 	exit 1	
