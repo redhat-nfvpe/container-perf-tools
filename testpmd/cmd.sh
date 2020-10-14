@@ -48,6 +48,16 @@ if [[ -z "${pci_west}" || -z "${pci_east}" ]]; then
         exit 1
 fi
 
+# make sure pci address starts with 0000:
+prefix=$(cat $pci_west | cut -f 1 -d:)
+if [[ "${prefix}" != "0000" ]]; then
+	pci_west=0000:${pci_west}
+fi
+prefix=$(cat $pci_east | cut -f 1 -d:)
+if [[ "${prefix}" != "0000" ]]; then
+        pci_east=0000:${pci_east}
+fi
+
 vf_driver=$(ls /sys/bus/pci/devices/${pci_west}/driver/module/drivers/| sed -n -r 's/.*:(.+)/\1/p' | head -1)
 if [[ -z "${vf_driver}" ]]; then
 	echo "couldn't get driver info from /sys/bus/pci/devices/${pci_west}/driver/module/drivers/"
@@ -55,11 +65,21 @@ if [[ -z "${vf_driver}" ]]; then
 	exit 1
 fi
 
+# get pci slot mac address; these mac address can be used by trafficgen when used in l3 mode
+mac_pci_west=$(cat /sys/bus/pci/devices/${pci_west}/net/*/address | head -1)
+mac_pci_east=$(cat /sys/bus/pci/devices/${pci_east}/net/*/address | head -1)
+
 if [[ -z "${ring_size}" ]]; then
         ring_size=2048
 fi
 
-echo "pci_west ${pci_west} pci_east ${pci_east} vf_driver ${vf_driver} ring_size ${ring_size}"
+if [[ -z "${peer_mac_west}" || -z "${peer_mac_east}" ]]; then
+	l3=1
+else
+	l3=0
+fi
+
+echo "pci_west ${pci_west} pci_east ${pci_east} vf_driver ${vf_driver} ring_size ${ring_size} l3 ${l3}"
 
 # if python not exist, try link it to python3
 if ! command -v python >/dev/null 2>&1; then
@@ -107,10 +127,19 @@ fi
 
 trap sigfunc TERM INT SIGUSR1
 
-testpmd_cmd="testpmd -l ${cpus[0]},${cpus[1]},${cpus[2]} --socket-mem ${mem} -n 4 --proc-type auto \
+if ((l3 == 0)); then
+	testpmd_cmd="testpmd -l ${cpus[0]},${cpus[1]},${cpus[2]} --socket-mem ${mem} -n 4 --proc-type auto \
                  --file-prefix pg -w ${pci_west} -w ${pci_east} \
                  -- --nb-cores=2 --nb-ports=2 --portmask=3  --auto-start \
                     --rxq=1 --txq=1 --rxd=${ring_size} --txd=${ring_size}"
+else
+	testpmd_cmd="testpmd -l ${cpus[0]},${cpus[1]},${cpus[2]} --socket-mem ${mem} -n 4 --proc-type auto \
+		--file-prefix pg -w ${pci_west} -w ${pci_east} \
+		-- --nb-cores=2 --nb-ports=2 --portmask=3  --auto-start --forward-mode=mac --eth-peer=0,${peer_mac_west} --eth-peer=1,${peer_mac_east} \
+		--rxq=1 --txq=1 --rxd=${ring_size} --txd=${ring_size}"
+	# print out pci_west and pci_east mac address
+	echo "mac_pci_west=${mac_pci_west}, mac_pci_east=${mac_pci_east}"
+fi
 
 if [[ "${manual:-n}" == "y" ]]; then
 	echo "${testpmd_cmd}"
