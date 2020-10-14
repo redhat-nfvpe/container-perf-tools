@@ -16,6 +16,8 @@ loss_ratio=${loss_ratio:-0.002}
 flows=${flows:-1}
 frame_size=${frame_size:-64}
 
+modprobe vfio-pci
+
 if [ -z "$1" ]; then
     # do nothing
     cd /root/tgen

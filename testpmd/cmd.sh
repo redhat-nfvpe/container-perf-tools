@@ -51,7 +51,8 @@ fi
 vf_driver=$(ls /sys/bus/pci/devices/${pci_west}/driver/module/drivers/| sed -n -r 's/.*:(.+)/\1/p' | head -1)
 if [[ -z "${vf_driver}" ]]; then
 	echo "couldn't get driver info from /sys/bus/pci/devices/${pci_west}/driver/module/drivers/"
-	exit 1	
+	echo "${pci_west} need to bind to kernel driver before running this app"
+	exit 1
 fi
 
 if [[ -z "${ring_size}" ]]; then
