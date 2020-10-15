@@ -49,11 +49,11 @@ if [[ -z "${pci_west}" || -z "${pci_east}" ]]; then
 fi
 
 # make sure pci address starts with 0000:
-prefix=$(cat $pci_west | cut -f 1 -d:)
+prefix=$(echo $pci_west | cut -f 1 -d:)
 if [[ "${prefix}" != "0000" ]]; then
 	pci_west=0000:${pci_west}
 fi
-prefix=$(cat $pci_east | cut -f 1 -d:)
+prefix=$(echo $pci_east | cut -f 1 -d:)
 if [[ "${prefix}" != "0000" ]]; then
         pci_east=0000:${pci_east}
 fi
@@ -74,9 +74,9 @@ if [[ -z "${ring_size}" ]]; then
 fi
 
 if [[ -z "${peer_mac_west}" || -z "${peer_mac_east}" ]]; then
-	l3=1
-else
 	l3=0
+else
+	l3=1
 fi
 
 echo "pci_west ${pci_west} pci_east ${pci_east} vf_driver ${vf_driver} ring_size ${ring_size} l3 ${l3}"
