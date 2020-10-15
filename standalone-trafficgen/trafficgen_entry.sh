@@ -1,4 +1,5 @@
 #!/bin/bash
+# env: peer_mac_west peer_mac_east validation_seconds search_seconds sniff_seconds loss_ratio flows frame_size
 
 function sigfunc() {
     pid=`pgrep binary-search`
@@ -50,6 +51,14 @@ else
             fi
             ((index+=2))
         done
+	# only twp peer mac address can be specified as gateway, if >2 pci slot is supplied, then fall back to io mode even and ignore the peer mac address 
+	if ((index > 2)); then
+	    l3=0
+	elif [[ -z "${peer_mac_west}" || -z "${peer_mac_east}" ]]; then
+	    l3=0
+	else
+	    l3=1
+	fi
     fi
 
     cd /root/tgen
@@ -65,12 +74,21 @@ else
         if [ ${num_ports} -eq 2 ]; then
             echo "trex-server is ready"
             for size in $(echo ${frame_size} | sed -e 's/,/ /g'); do
+	      if (( l3 == 0)); then
                 ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --rate-tolerance-failure=fail \
                 --rate-unit=% --rate=100
+	      else
+                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
+                --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
+                --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
+                --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
+                --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --dst-macs=${peer_mac_west},${peer_mac_east} --rate-tolerance-failure=fail \
+                --rate-unit=% --rate=100
+	      fi
             done
         else
             echo "ERROR: trex-server could not start properly"

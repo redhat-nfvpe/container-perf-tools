@@ -3,6 +3,7 @@
 # env vars:
 #	ring_size (default 2048)
 #	manual    (default n, choices y/n)
+#	peer_mac_west peer_mac_east
 
 source common-libs/functions.sh
 
@@ -117,6 +118,7 @@ mem="1024,1024"
 
 # bind driver to vfio-pci unless it is mlnx nic
 if [ "${vf_driver}" != "mlx5_core" ]; then
+    modprobe vfio-pci
     bind_driver "vfio-pci"
     sleep 1
 fi
