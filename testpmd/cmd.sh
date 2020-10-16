@@ -3,7 +3,8 @@
 # env vars:
 #	ring_size (default 2048)
 #	manual    (default n, choices y/n)
-#	peer_mac_west peer_mac_east
+#	peer_mac_west peer_mac_east (optional), use mac forward mode if provided; otherwise io mode
+#	queues (default 1)
 
 source common-libs/functions.sh
 
@@ -104,13 +105,15 @@ done
 cpulist=`get_allowed_cpuset`
 echo "allowed cpu list: ${cpulist}"
 
-cpulist=`convert_number_range ${cpulist} | tr , '\n' | sort -n | uniq`
+normalized_cpulist=`convert_number_range ${cpulist} | tr , '\n' | sort -n | uniq`
+
+queues=${queues:-1}
 
 declare -a cpus
-cpus=(${cpulist})
+cpus=(${normalized_cpulist})
 
-if (( ${#cpus[@]} < 3 )); then
-	echo "need at least 3 cpu to run this test!"
+if (( ${#cpus[@]} < (2*queues + 1) )); then
+	echo "need at least $((2*queues + 1)) cpu to run this test with ${queues} queues!"
 	exit 1
 fi
 
@@ -130,15 +133,15 @@ fi
 trap sigfunc TERM INT SIGUSR1
 
 if ((l3 == 0)); then
-	testpmd_cmd="testpmd -l ${cpus[0]},${cpus[1]},${cpus[2]} --socket-mem ${mem} -n 4 --proc-type auto \
+	testpmd_cmd="testpmd -l ${cpulist} --socket-mem ${mem} -n 4 --proc-type auto \
                  --file-prefix pg -w ${pci_west} -w ${pci_east} \
-                 -- --nb-cores=2 --nb-ports=2 --portmask=3  --auto-start \
-                    --rxq=1 --txq=1 --rxd=${ring_size} --txd=${ring_size}"
+		 -- --nb-cores=$((2*queues)) --nb-ports=2 --portmask=3  --auto-start \
+                    --rxq=${queues} --txq=${queues} --rxd=${ring_size} --txd=${ring_size}"
 else
 	testpmd_cmd="testpmd -l ${cpus[0]},${cpus[1]},${cpus[2]} --socket-mem ${mem} -n 4 --proc-type auto \
 		--file-prefix pg -w ${pci_west} -w ${pci_east} \
-		-- --nb-cores=2 --nb-ports=2 --portmask=3  --auto-start --forward-mode=mac --eth-peer=0,${peer_mac_west} --eth-peer=1,${peer_mac_east} \
-		--rxq=1 --txq=1 --rxd=${ring_size} --txd=${ring_size}"
+		-- --nb-cores=$((2*queues)) --nb-ports=2 --portmask=3  --auto-start --forward-mode=mac --eth-peer=0,${peer_mac_west} --eth-peer=1,${peer_mac_east} \
+		--rxq=${queues} --txq=${queues} --rxd=${ring_size} --txd=${ring_size}"
 	# print out pci_west and pci_east mac address
 	echo "mac_pci_west=${mac_pci_west}, mac_pci_east=${mac_pci_east}"
 fi
