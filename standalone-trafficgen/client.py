@@ -119,7 +119,7 @@ if __name__ == '__main__':
                         default=50051,
                         type = int
                         )
-    parser.add_argument('--l3', dest='l3', default=False, action=L3Action)
-    parser.add_argument('--dst-macs', dest='dst_macs', default=None, type = str)
+    parser.add_argument('--l3', dest='l3', help='enable l3 mode', default=False, action=L3Action)
+    parser.add_argument('--dst-macs', help='comma seperated l3 gw mac address', dest='dst_macs', default=None, type = str)
     args = parser.parse_args()
     run(args)

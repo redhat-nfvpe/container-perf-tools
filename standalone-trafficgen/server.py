@@ -98,7 +98,7 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
         if checkIfProcessRunning("binary-search"):
             if not killProcessByName("binary-search"):
                 return rpc_pb2.Success(success=False)
-        if not l3:
+        if not request.l3:
             subprocess.Popen(["./binary-search.py", "--traffic-generator=trex-txrx",
                           "--device-pairs=%s" % request.device_pairs,
                           "--search-runtime=%d" % request.search_runtime,
