@@ -28,7 +28,8 @@ RUN pip install --upgrade pip \
        && curl -L -k -o /root/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_x86_64 \
        && chmod +x /root/dumb-init \
        && yum clean all && rm -rf /var/cache/yum
-COPY launch-trex.sh server.py rpc_pb2.py rpc_pb2_grpc.py /root/tgen/
+COPY launch-trex.sh server.py rpc.proto /root/tgen/
+RUN pushd /root/tgen && python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto && rm rpc.proto && popd
 COPY trafficgen_entry.sh /root/
 RUN chmod 777 /root/trafficgen_entry.sh /root/tgen/launch-trex.sh /root/tgen/binary-search.py /root/tgen/trex-query.py /root/tgen/trex-txrx.py
 

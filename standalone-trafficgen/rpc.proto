@@ -53,6 +53,8 @@ message BinarySearchParams {
     string device_pairs = 4;
     int32 frame_size = 5;
     float max_loss_pct = 6;
-    int32 sniff_runtime= 7;
+    int32 sniff_runtime = 7;
+    bool l3 = 8;
+    string dst_macs = 9;
 }
      

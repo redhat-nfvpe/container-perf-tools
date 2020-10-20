@@ -23,7 +23,9 @@ def actionStartTrafficgen(args, stub):
             device_pairs=args.device_pairs,
             frame_size=args.frame_size,
             max_loss_pct=args.max_loss_pct,
-            sniff_runtime=args.sniff_runtime
+            sniff_runtime=args.sniff_runtime,
+            l3=args.l3,
+            dst_macs=args.dst_macs
             ))
     print("start trafficgen: %s" % ("success" if response.success else "fail"))
 
@@ -50,6 +52,13 @@ def run(args):
             actionGetResult(stub)
         else:
             print("invalid action: %s" %(args.action))
+
+class L3Action(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if dst_macs is None:
+            parser.error('--dst-macs is required when l3 mode is specified')
+        else:
+            namespace.l3 = True
 
 if __name__ == '__main__':
     logging.basicConfig()
@@ -110,5 +119,7 @@ if __name__ == '__main__':
                         default=50051,
                         type = int
                         )
+    parser.add_argument('--l3', dest='l3', default=False, action=L3Action)
+    parser.add_argument('--dst-macs', dest='dst_macs', default=None, type = str)
     args = parser.parse_args()
     run(args)
