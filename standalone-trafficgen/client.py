@@ -5,6 +5,7 @@ import rpc_pb2
 import rpc_pb2_grpc
 import time
 import argparse
+import re
 
 def actionGetResult(stub):
     response = stub.isResultAvailable(rpc_pb2.IsResultAvailableParams())
@@ -24,7 +25,7 @@ def actionStartTrafficgen(args, stub):
             frame_size=args.frame_size,
             max_loss_pct=args.max_loss_pct,
             sniff_runtime=args.sniff_runtime,
-            l3=args.l3,
+            l3=l3,
             dst_macs=args.dst_macs
             ))
     print("start trafficgen: %s" % ("success" if response.success else "fail"))
@@ -53,14 +54,21 @@ def run(args):
         else:
             print("invalid action: %s" %(args.action))
 
-class L3Action(argparse.Action):
+class DstMacsParse(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        if dst_macs is None:
-            parser.error('--dst-macs is required when l3 mode is specified')
-        else:
-            namespace.l3 = True
+        for x in values.split(','):
+            if re.match("[0-9a-f]{2}([-:]?)[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", x.lower()):
+                continue
+            else:
+                parser.error('%s needs to be comma seperated mac addresses' %(option_string))
+                return
+        global l3
+        l3 = True
+        namespace.dst_macs = values
 
 if __name__ == '__main__':
+    global l3
+    l3 = False
     logging.basicConfig()
     parser = argparse.ArgumentParser(description='Trafficgen client')
     parser.add_argument('action',
@@ -119,7 +127,6 @@ if __name__ == '__main__':
                         default=50051,
                         type = int
                         )
-    parser.add_argument('--l3', dest='l3', help='enable l3 mode', default=False, action=L3Action)
-    parser.add_argument('--dst-macs', help='comma seperated l3 gw mac address', dest='dst_macs', default=None, type = str)
+    parser.add_argument('--dst-macs', help='comma seperated l3 gw mac address', dest='dst_macs', default=None, type = str, action=DstMacsParse)
     args = parser.parse_args()
     run(args)
