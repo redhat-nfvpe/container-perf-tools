@@ -1,6 +1,6 @@
 FROM centos:8
 USER root
-COPY testpmd.py /root
+COPY standalone-testpmd /root
 RUN  yum -y --enablerepo=extras install epel-release git which pciutils wget tmux \
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \
@@ -18,7 +18,7 @@ RUN  yum -y --enablerepo=extras install epel-release git which pciutils wget tmu
     && yum clean all && rm -rf /var/cache/yum \
     && wget -O /root/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
     && chmod 777 /root/dumb-init \
-    && chmod 777 /root/testpmd.py
+    && chmod 777 /root/standalone-testpmd
 WORKDIR /root
 ENTRYPOINT ["/root/dumb-init", "--"]
-CMD ["/root/testpmd.py"]
+CMD ["/root/standalone-testpmd", "-pci=86:00.0", "-pci=86:00.1"]
