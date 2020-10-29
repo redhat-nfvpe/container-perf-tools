@@ -1,0 +1,29 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+option go_package = "github.com/redhat-nfvpe/container-perf-tools/standalone-testpmd/rpc";
+
+package testpmd;
+
+service testpmd {
+    rpc GetMacAddress(Pci) returns (MacAddress);
+    rpc IcmpMode(google.protobuf.Empty) returns (Success);
+    rpc IoMode(google.protobuf.Empty) returns (Success);
+    rpc MacMode(PeerMacs) returns (Success);
+}
+
+message Success {
+    bool success = 1;
+}
+
+message MacAddress {
+    string macAddress = 1;
+}
+
+message Pci {
+   string pciAddress = 1;
+}
+
+message PeerMacs {
+   repeated string macAddress = 1;
+}
+

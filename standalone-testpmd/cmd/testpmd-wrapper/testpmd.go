@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -14,10 +16,17 @@ import (
 	"syscall"
 	"time"
 
+	empty "github.com/golang/protobuf/ptypes/empty"
 	expect "github.com/google/goexpect"
 	"github.com/lithammer/shortuuid"
+	pb "github.com/redhat-nfvpe/container-perf-tools/standalone-testpmd/rpc"
+	"google.golang.org/grpc"
 	"k8s.io/kubernetes/pkg/kubelet/cm/cpuset"
 )
+
+type server struct {
+	pb.UnimplementedTestpmdServer
+}
 
 const (
 	startTimeout = 60 * time.Second
@@ -36,6 +45,8 @@ type testpmd struct {
 	filePrefix string
 	e          *expect.GExpect
 }
+
+var pTestpmd *testpmd
 
 func (t *testpmd) init(pci pciArray, queues int, ring int, testpmdPath string) error {
 	ports := len(pci)
@@ -167,19 +178,24 @@ type pciInfo struct {
 	device string
 }
 
-//var pciRecord map[string]pciInfo
+//normalize PCI address with prefix 0000:
+func normalizePci(pci string) string {
+	var npci string
+	if !strings.HasPrefix(pci, "0000:") {
+		npci = "0000:" + pci
+	} else {
+		npci = pci
+	}
+	return npci
+}
 
 func (p *pciArray) String() string {
 	return strings.Join(*p, " ")
 }
 
 func (p *pciArray) Set(value string) error {
-	// todo: validate pci address exists
 	// normalize pci address to start with 0000: prefix
-	pci := value
-	if !strings.HasPrefix(pci, "0000:") {
-		pci = "0000:" + pci
-	}
+	pci := normalizePci(value)
 	if _, err := os.Stat(pciDeviceDir + pci); os.IsNotExist(err) {
 		log.Fatalf("invalid pci %s", value)
 		return fmt.Errorf("invalid pci %s", value)
@@ -337,7 +353,46 @@ func restoreKernalPorts(pci pciArray, record map[string]*pciInfo) error {
 	return nil
 }
 
+func (s *server) GetMacAddress(ctx context.Context, in *pb.Pci) (*pb.MacAddress, error) {
+	pci := normalizePci(in.PciAddress)
+	log.Printf("GetMacAddress: PCI %v\n", pci)
+	if mac, err := pTestpmd.getMacAddress(pci); err != nil {
+		return &pb.MacAddress{MacAddress: ""}, err
+	} else {
+		return &pb.MacAddress{MacAddress: mac}, nil
+	}
+}
+
+func (s *server) IcmpMode(ctx context.Context, in *empty.Empty) (*pb.Success, error) {
+	log.Printf("IcmpMode:\n")
+	if err := pTestpmd.icmpMode(); err != nil {
+		return &pb.Success{Success: false}, err
+	} else {
+		return &pb.Success{Success: true}, nil
+	}
+}
+
+func (s *server) IoMode(ctx context.Context, in *empty.Empty) (*pb.Success, error) {
+	log.Printf("IoMode:\n")
+	if err := pTestpmd.ioMode(); err != nil {
+		return &pb.Success{Success: false}, err
+	} else {
+		return &pb.Success{Success: true}, nil
+	}
+}
+
+func (s *server) MacMode(ctx context.Context, in *pb.PeerMacs) (*pb.Success, error) {
+	log.Printf("MacMode: %+q\n", in.MacAddress)
+	//TODO, use the peer mac address in testpmd
+	if err := pTestpmd.macMode(); err != nil {
+		return &pb.Success{Success: false}, err
+	} else {
+		return &pb.Success{Success: true}, nil
+	}
+}
+
 func main() {
+	grpcPort := flag.Int("grpc-port", 9000, "grpc port")
 	autoStart := flag.Bool("auto", false, "auto start in io mode")
 	queues := flag.Int("queues", 1, "number of rxq/txq")
 	ring := flag.Int("ring-size", 2048, "ring size")
@@ -349,25 +404,42 @@ func main() {
 	if err := setupDpdkPorts("vfio-pci", pci, pciRecord); err != nil {
 		log.Fatal(err)
 	}
-	t := testpmd{}
-	if err := t.init(pci, *queues, *ring, *testpmdPath); err != nil {
+
+	pTestpmd = &testpmd{}
+	if err := pTestpmd.init(pci, *queues, *ring, *testpmdPath); err != nil {
 		log.Fatalf("%v", err)
 	}
 	if *autoStart {
-		if err := t.ioMode(); err != nil {
+		log.Printf("auto start io mode\n")
+		if err := pTestpmd.ioMode(); err != nil {
 			log.Fatal(err)
 		}
 	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *grpcPort))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	pb.RegisterTestpmdServer(s, &server{})
+
+	done := make(chan int)
+	go func() error {
+		// this should block
+		err := s.Serve(lis)
+		// return means the service is stopped, notify the main thread
+		done <- 1
+		return err
+	}()
+
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	for {
-		select {
-		case <-sigs:
-			t.stop()
-			if err := restoreKernalPorts(pci, pciRecord); err != nil {
-				log.Fatal(err)
-			}
-			os.Exit(0)
-		}
+	signal.Notify(sigs, syscall.SIGINT, os.Interrupt, syscall.SIGTERM)
+	<-sigs
+	s.Stop()
+	// make sure grpc thread is done
+	<-done
+	pTestpmd.stop()
+	if err := restoreKernalPorts(pci, pciRecord); err != nil {
+		log.Fatal(err)
 	}
 }
