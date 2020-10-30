@@ -28,7 +28,7 @@ func (p *macArray) Set(value string) error {
 func main() {
 	grpcPort := flag.Int("grpc-port", 9000, "grpc port")
 	serverIP := flag.String("server", "127.0.0.1", "testpmd server")
-	pci := flag.String("pci", "0000:86:00.0", "pci address to get mac from")
+	pci := flag.String("pci", "0000:86:00.0", "pci address to get mac or port info from")
 	var peerMacs macArray
 	flag.Var(&peerMacs, "peer-mac", "format: <port number>,<mac>, can specify multiple times")
 	flag.Parse()
