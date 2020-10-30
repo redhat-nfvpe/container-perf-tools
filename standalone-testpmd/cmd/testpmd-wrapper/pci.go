@@ -32,11 +32,24 @@ type pciInfo struct {
 	device string
 }
 
-var driverArray = []deviceDriver{
-	{
-		vendor: "0x8086",
-		device: "0x158b",
-		kmod:   "i40e",
+type kdDrivers struct {
+	kernel string
+	dpdk   string
+}
+
+type deviceDriverMap map[string]*kdDrivers
+
+var (
+	intelDefaultDrivers = &kdDrivers{kernel: "i40e", dpdk: "vfio-pci"}
+	mlxDefaultDrivers   = &kdDrivers{kernel: "mlx5_core", dpdk: "mlx5_core"}
+)
+
+var vendorDriverMap = map[string]deviceDriverMap{
+	"0x8086": {
+		"default": mlxDefaultDrivers,
+	},
+	"0x15b3": {
+		"default": mlxDefaultDrivers,
 	},
 }
 
@@ -101,19 +114,21 @@ func pciRemoveID(vendor string, device string, driver string) error {
 	return ioutil.WriteFile(removeIDPath, []byte(vendor+" "+device), 0200)
 }
 
-type deviceDriver struct {
-	device string
-	vendor string
-	kmod   string
-}
-
 func getDriverFromDeviceVendor(vendor string, device string) (string, error) {
-	for _, d := range driverArray {
-		if d.vendor == vendor && d.device == device {
-			return d.kmod, nil
-		}
+	deviceMap, ok := vendorDriverMap[vendor]
+	if !ok {
+		return "", fmt.Errorf("device driver map not defined for vendor %s", vendor)
 	}
-	return "", fmt.Errorf("kmod not defined for vendor %s device %s", vendor, device)
+	driver, ok := deviceMap[device]
+	if ok {
+		return driver.kernel, nil
+	}
+	// fall back to default driver for this vendor
+	driver, ok = deviceMap["default"]
+	if ok {
+		return driver.kernel, nil
+	}
+	return "", fmt.Errorf("device driver map not defined for vendor %s", vendor)
 }
 
 func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo) error {
@@ -167,6 +182,10 @@ func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo)
 
 func restoreKernalPorts(pci pciArray, record map[string]*pciInfo) error {
 	for _, p := range pci {
+		if record[p].driverCur == record[p].kmod {
+			// mlnx case, kernel driver is used by dpdk
+			continue
+		}
 		if record[p].wasKernelPort {
 			log.Printf("bind %s to %s\n", p, record[p].kmod)
 			if err := unbind(p); err != nil {

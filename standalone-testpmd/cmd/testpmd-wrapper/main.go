@@ -37,9 +37,10 @@ func main() {
 	var pci pciArray
 	flag.Var(&pci, "pci", "pci address, can specify multiple times")
 	testpmdPath := flag.String("testpmd-path", "testpmd", "if not in PATH, specify the testpmd location")
+	dpdkDriver := flag.String("dpdk-driver", "vfio-pci", "dpdk driver")
 	flag.Parse()
 	pciRecord := make(map[string]*pciInfo)
-	if err := setupDpdkPorts("vfio-pci", pci, pciRecord); err != nil {
+	if err := setupDpdkPorts(*dpdkDriver, pci, pciRecord); err != nil {
 		log.Fatal(err)
 	}
 
