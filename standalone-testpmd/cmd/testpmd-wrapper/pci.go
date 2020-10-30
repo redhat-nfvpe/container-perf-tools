@@ -46,7 +46,7 @@ var (
 
 var vendorDriverMap = map[string]deviceDriverMap{
 	"0x8086": {
-		"default": mlxDefaultDrivers,
+		"default": intelDefaultDrivers,
 	},
 	"0x15b3": {
 		"default": mlxDefaultDrivers,
@@ -114,21 +114,21 @@ func pciRemoveID(vendor string, device string, driver string) error {
 	return ioutil.WriteFile(removeIDPath, []byte(vendor+" "+device), 0200)
 }
 
-func getDriverFromDeviceVendor(vendor string, device string) (string, error) {
+func getDriverFromDeviceVendor(vendor string, device string) (*kdDrivers, error) {
 	deviceMap, ok := vendorDriverMap[vendor]
 	if !ok {
-		return "", fmt.Errorf("device driver map not defined for vendor %s", vendor)
+		return nil, fmt.Errorf("device driver map not defined for vendor %s", vendor)
 	}
 	driver, ok := deviceMap[device]
 	if ok {
-		return driver.kernel, nil
+		return driver, nil
 	}
 	// fall back to default driver for this vendor
 	driver, ok = deviceMap["default"]
 	if ok {
-		return driver.kernel, nil
+		return driver, nil
 	}
-	return "", fmt.Errorf("device driver map not defined for vendor %s", vendor)
+	return nil, fmt.Errorf("default driver not defined for vendor %s", vendor)
 }
 
 func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo) error {
@@ -142,17 +142,28 @@ func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo)
 		info.vendor = strings.TrimSpace(string(out))
 		out, _ = ioutil.ReadFile(pciDeviceDir + p + "/device")
 		info.device = strings.TrimSpace(string(out))
-		kmod, err := getDriverFromDeviceVendor(info.vendor, info.device)
+		drivers, err := getDriverFromDeviceVendor(info.vendor, info.device)
 		if err != nil {
 			log.Fatal(err)
 		}
-		info.kmod = kmod
+		info.kmod = drivers.kernel
+		// does this device use kmod as dpdk driver
+		dpdkUseKmod := false
+		if drivers.dpdk == drivers.kernel {
+			log.Printf("dpdk use the same driver as kernel %s", drivers.kernel)
+			dpdkUseKmod = true
+		}
 		bound, driver := isDeviceBound(p)
 		if bound {
 			info.driverPre = driver
 			if isKernelDevice(p) {
 				info.kmod = driver
 				info.wasKernelPort = true
+				// if dpdk use kmod, skip the rest
+				if dpdkUseKmod {
+					info.driverCur = driver
+					continue
+				}
 			} else if driver == dpdkDriver {
 				// already on dpdk driver, skip
 				info.driverCur = dpdkDriver
@@ -161,7 +172,15 @@ func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo)
 			// unbind first
 			unbind(p)
 		}
-		// set up new_id if not done yet
+		if dpdkUseKmod {
+			// if dpdk use kernel driver, ignore the dpdk driver parameter
+			if err := bind(p, drivers.kernel); err != nil {
+				return err
+			}
+			info.driverCur = drivers.kernel
+			continue
+		}
+		// otherwise, set up new_id if not done yet
 		if err := pciNewID(info.vendor, info.device, dpdkDriver); err != nil {
 			return err
 		}
@@ -183,7 +202,7 @@ func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo)
 func restoreKernalPorts(pci pciArray, record map[string]*pciInfo) error {
 	for _, p := range pci {
 		if record[p].driverCur == record[p].kmod {
-			// mlnx case, kernel driver is used by dpdk
+			// mlnx like case, kernel driver is used by dpdk
 			continue
 		}
 		if record[p].wasKernelPort {

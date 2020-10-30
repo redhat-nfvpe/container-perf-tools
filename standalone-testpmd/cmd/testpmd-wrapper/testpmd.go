@@ -64,7 +64,7 @@ func (t *testpmd) init(pci pciArray, queues int, ring int, testpmdPath string) e
 		log.Fatal(err)
 	}
 	t.e = e
-	if _, _, err := t.e.Expect(promptRE, cmdTimeout); err != nil {
+	if _, _, err := t.e.Expect(promptRE, startTimeout); err != nil {
 		return err
 	}
 	return nil

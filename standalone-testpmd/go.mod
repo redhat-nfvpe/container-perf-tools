@@ -51,7 +51,6 @@ require (
 	github.com/google/goexpect v0.0.0-20200816234442-b5b77125c2c5
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	google.golang.org/grpc v1.33.0-dev
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1 // indirect
 	google.golang.org/protobuf v1.25.0
 	k8s.io/kubernetes v1.19.1
 )
