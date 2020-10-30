@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,9 +28,9 @@ func (p *macArray) Set(value string) error {
 func main() {
 	grpcPort := flag.Int("grpc-port", 9000, "grpc port")
 	serverIP := flag.String("server", "127.0.0.1", "testpmd server")
-	pci := flag.String("pci", "0000:86:00.0", "pci address")
+	pci := flag.String("pci", "0000:86:00.0", "pci address to get mac from")
 	var peerMacs macArray
-	flag.Var(&peerMacs, "peer-mac", "peer mac address, can specify multiple times")
+	flag.Var(&peerMacs, "peer-mac", "format: <port number>,<mac>, can specify multiple times")
 	flag.Parse()
 
 	cmdArgs := flag.Args()
@@ -69,7 +70,22 @@ func main() {
 			log.Fatalf("Failed to start io fwd")
 		}
 	case "mac":
-		r, err := c.MacMode(ctx, &pb.PeerMacs{MacAddress: peerMacs})
+		var mPeer []*pb.PeerMac
+		for _, v := range peerMacs {
+			s := strings.Split(v, ",")
+			if len(s) != 2 {
+				log.Fatalf("illegal peer-mac format: %s", v)
+			}
+			p := &pb.PeerMac{}
+			i, err := strconv.Atoi(s[0])
+			if err != nil {
+				log.Fatalf("illegal port number in peer-mac: %s", v)
+			}
+			p.PortNum = int32(i)
+			p.MacAddress = s[1]
+			mPeer = append(mPeer, p)
+		}
+		r, err := c.MacMode(ctx, &pb.PeerMacs{PeerMac: mPeer})
 		if err != nil {
 			log.Fatalf("could not get response: %v", err)
 		}
@@ -88,5 +104,21 @@ func main() {
 		} else {
 			log.Fatalf("Failed to start icmp fwd")
 		}
+	case "ports":
+		r, err := c.ListPorts(ctx, &empty.Empty{})
+		if err != nil {
+			log.Fatalf("could not get response: %v", err)
+		}
+		for _, port := range r.PortInfo {
+			fmt.Printf("port number: %d, mac: %s, pci: %s\n", port.PortNum, port.MacAddress, port.PciAddress)
+		}
+	case "port":
+		r, err := c.GetPortInfo(ctx, &pb.Pci{PciAddress: *pci})
+		if err != nil {
+			log.Fatalf("could not get response: %v", err)
+		}
+		fmt.Printf("portNum: %d, mac: %s, pci: %s\n", r.PortNum, r.MacAddress, r.PciAddress)
+	default:
+		fmt.Println("supported commands: get-mac ports port io mac icmp")
 	}
 }

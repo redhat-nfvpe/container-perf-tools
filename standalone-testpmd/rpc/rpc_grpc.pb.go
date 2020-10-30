@@ -19,6 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TestpmdClient interface {
 	GetMacAddress(ctx context.Context, in *Pci, opts ...grpc.CallOption) (*MacAddress, error)
+	GetPortInfo(ctx context.Context, in *Pci, opts ...grpc.CallOption) (*PortInfo, error)
+	ListPorts(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PortList, error)
 	IcmpMode(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Success, error)
 	IoMode(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Success, error)
 	MacMode(ctx context.Context, in *PeerMacs, opts ...grpc.CallOption) (*Success, error)
@@ -35,6 +37,24 @@ func NewTestpmdClient(cc grpc.ClientConnInterface) TestpmdClient {
 func (c *testpmdClient) GetMacAddress(ctx context.Context, in *Pci, opts ...grpc.CallOption) (*MacAddress, error) {
 	out := new(MacAddress)
 	err := c.cc.Invoke(ctx, "/testpmd.testpmd/GetMacAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testpmdClient) GetPortInfo(ctx context.Context, in *Pci, opts ...grpc.CallOption) (*PortInfo, error) {
+	out := new(PortInfo)
+	err := c.cc.Invoke(ctx, "/testpmd.testpmd/GetPortInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testpmdClient) ListPorts(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PortList, error) {
+	out := new(PortList)
+	err := c.cc.Invoke(ctx, "/testpmd.testpmd/ListPorts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +93,8 @@ func (c *testpmdClient) MacMode(ctx context.Context, in *PeerMacs, opts ...grpc.
 // for forward compatibility
 type TestpmdServer interface {
 	GetMacAddress(context.Context, *Pci) (*MacAddress, error)
+	GetPortInfo(context.Context, *Pci) (*PortInfo, error)
+	ListPorts(context.Context, *empty.Empty) (*PortList, error)
 	IcmpMode(context.Context, *empty.Empty) (*Success, error)
 	IoMode(context.Context, *empty.Empty) (*Success, error)
 	MacMode(context.Context, *PeerMacs) (*Success, error)
@@ -85,6 +107,12 @@ type UnimplementedTestpmdServer struct {
 
 func (UnimplementedTestpmdServer) GetMacAddress(context.Context, *Pci) (*MacAddress, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMacAddress not implemented")
+}
+func (UnimplementedTestpmdServer) GetPortInfo(context.Context, *Pci) (*PortInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPortInfo not implemented")
+}
+func (UnimplementedTestpmdServer) ListPorts(context.Context, *empty.Empty) (*PortList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPorts not implemented")
 }
 func (UnimplementedTestpmdServer) IcmpMode(context.Context, *empty.Empty) (*Success, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IcmpMode not implemented")
@@ -122,6 +150,42 @@ func _Testpmd_GetMacAddress_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TestpmdServer).GetMacAddress(ctx, req.(*Pci))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Testpmd_GetPortInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Pci)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestpmdServer).GetPortInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpmd.testpmd/GetPortInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestpmdServer).GetPortInfo(ctx, req.(*Pci))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Testpmd_ListPorts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestpmdServer).ListPorts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpmd.testpmd/ListPorts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestpmdServer).ListPorts(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -187,6 +251,14 @@ var _Testpmd_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMacAddress",
 			Handler:    _Testpmd_GetMacAddress_Handler,
+		},
+		{
+			MethodName: "GetPortInfo",
+			Handler:    _Testpmd_GetPortInfo_Handler,
+		},
+		{
+			MethodName: "ListPorts",
+			Handler:    _Testpmd_ListPorts_Handler,
 		},
 		{
 			MethodName: "IcmpMode",
