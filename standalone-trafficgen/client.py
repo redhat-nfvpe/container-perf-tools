@@ -14,7 +14,9 @@ def actionGetResult(stub):
         return
     response = stub.getResult(rpc_pb2.GetResultParams())
     print("port %s rx_pps: %.2f" %(response.stats[0].port, response.stats[0].rx_pps))
+    print("port %s rx_latency_average: %.2f" %(response.stats[0].port, response.stats[0].rx_latency_average))
     print("port %s rx_pps: %.2f" %(response.stats[1].port, response.stats[1].rx_pps))
+    print("port %s rx_latency_average: %.2f" %(response.stats[1].port, response.stats[1].rx_latency_average))
 
 def actionStartTrafficgen(args, stub):
     response = stub.startTrafficgen(rpc_pb2.BinarySearchParams(
