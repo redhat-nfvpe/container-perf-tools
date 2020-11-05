@@ -42,6 +42,10 @@ def actionStatus(stub):
     response = stub.isResultAvailable(rpc_pb2.IsResultAvailableParams())
     print("test result is avalable: %s" % ("yes" if response.isResultAvailable else "no"))
 
+def actionGetMac(stub):
+    response = stub.getMacList(rpc_pb2.GetMacListParams())
+    print("This trafficgen mac list: %s" %(response.macList))
+
 def run(args):
     with grpc.insecure_channel("%s:%d" % (args.server_addr, args.server_port)) as channel:
         stub = rpc_pb2_grpc.TrafficgenStub(channel)
@@ -53,6 +57,8 @@ def run(args):
             actionStatus(stub)
         elif args.action == "get-result":
             actionGetResult(stub)
+        elif args.action == "get-mac":
+            actionGetMac(stub)
         else:
             print("invalid action: %s" %(args.action))
 
@@ -75,7 +81,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trafficgen client')
     parser.add_argument('action',
                         help='specify what action the server will take',
-                        choices=['start', 'stop', 'status', 'get-result']
+                        choices=['start', 'stop', 'status', 'get-result', 'get-mac']
                         )
     parser.add_argument('--frame-size',
                         dest='frame_size',
@@ -129,6 +135,12 @@ if __name__ == '__main__':
                         default=50051,
                         type = int
                         )
-    parser.add_argument('--dst-macs', help='comma seperated l3 gw mac address', dest='dst_macs', default=None, type = str, action=DstMacsParse)
+    parser.add_argument('--dst-macs',
+                        help='comma seperated l3 gw mac address',
+                        dest='dst_macs',
+                        default=None,
+                        type = str,
+                        action=DstMacsParse
+                        )    
     args = parser.parse_args()
     run(args)

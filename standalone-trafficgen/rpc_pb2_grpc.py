@@ -39,6 +39,11 @@ class TrafficgenStub(object):
                 request_serializer=rpc__pb2.StopTrafficgenParams.SerializeToString,
                 response_deserializer=rpc__pb2.Success.FromString,
                 )
+        self.getMacList = channel.unary_unary(
+                '/trafficgen.Trafficgen/getMacList',
+                request_serializer=rpc__pb2.GetMacListParams.SerializeToString,
+                response_deserializer=rpc__pb2.MacList.FromString,
+                )
 
 
 class TrafficgenServicer(object):
@@ -74,6 +79,12 @@ class TrafficgenServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def getMacList(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TrafficgenServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -101,6 +112,11 @@ def add_TrafficgenServicer_to_server(servicer, server):
                     servicer.stopTrafficgen,
                     request_deserializer=rpc__pb2.StopTrafficgenParams.FromString,
                     response_serializer=rpc__pb2.Success.SerializeToString,
+            ),
+            'getMacList': grpc.unary_unary_rpc_method_handler(
+                    servicer.getMacList,
+                    request_deserializer=rpc__pb2.GetMacListParams.FromString,
+                    response_serializer=rpc__pb2.MacList.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -194,5 +210,22 @@ class Trafficgen(object):
         return grpc.experimental.unary_unary(request, target, '/trafficgen.Trafficgen/stopTrafficgen',
             rpc__pb2.StopTrafficgenParams.SerializeToString,
             rpc__pb2.Success.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def getMacList(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/trafficgen.Trafficgen/getMacList',
+            rpc__pb2.GetMacListParams.SerializeToString,
+            rpc__pb2.MacList.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

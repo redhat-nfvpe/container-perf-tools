@@ -7,12 +7,14 @@ service Trafficgen {
     rpc getResult(GetResultParams) returns (Result);
     rpc startTrafficgen(BinarySearchParams) returns (Success);
     rpc stopTrafficgen(StopTrafficgenParams) returns (Success);
+    rpc getMacList(GetMacListParams) returns (MacList);
 }
 
 message IsTrafficgenRunningParams {}
 message IsResultAvailableParams {}
 message GetResultParams {}
 message StopTrafficgenParams {}
+message GetMacListParams {}
 
 message TrafficgenRunning {
     bool isTrafficgenRunning = 1;
@@ -24,6 +26,10 @@ message ResultAvailable {
 
 message Success {
     bool success = 1;
+}
+
+message MacList {
+    string macList = 1;
 }
 
 message PortStats {

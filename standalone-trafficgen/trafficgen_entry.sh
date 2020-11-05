@@ -17,22 +17,47 @@ loss_ratio=${loss_ratio:-0.002}
 flows=${flows:-1}
 frame_size=${frame_size:-64}
 
+pciDeviceDir="/sys/bus/pci/devices"
+
 modprobe vfio-pci
+
+for pci in $(echo ${pci_list} | sed -e 's/,/ /g'); do
+    if [[ ${pci} != 0000:* ]]; then
+        pci=0000:${pci}
+    fi
+    vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
+    device=$(cat ${pciDeviceDir}/${pci}/device)
+    if [ ! -d ${pciDeviceDir}/${pci}/net ]; then
+        if [[ ${vendor} == "0x8086" ]]; then
+            kmod="i40e"
+        else
+            echo "no kernel module defined for ${pci}"
+            exit 1
+        fi
+        dpdk-devbind -u ${pci}
+        dpdk-devbind -b ${kmod} ${pci}
+    fi
+    mac=$(cat ${pciDeviceDir}/${pci}/net/*/address)
+    echo "mac address for ${pci}: ${mac}"
+    if [[ ${mac_list:-""} == "" ]]; then 
+        mac_list="${mac}"
+    else
+        mac_list="${mac_list},${mac}"
+    fi
+done
 
 if [ -z "$1" ]; then
     # do nothing
     cd /root/tgen
     sleep infinity
-
 else
-    # client does not need to know pci_list
     if [ "$1" == "server" ] || [ "$1" == "start" ]; then
         if [ -z "${pci_list}" ]; then
         # is this a openshift sriov pod?
             pci_list=$(env | sed -n -r -e 's/PCIDEVICE.*=(.*)/\1/p' | tr '\n' ',')
             if [ -z "${pci_list}" ]; then
-                    echo "need env var: pci_list"
-                    exit 1
+                echo "need env var: pci_list"
+                exit 1
             fi
         fi
         # how many devices?
@@ -51,63 +76,54 @@ else
             fi
             ((index+=2))
         done
-	# only twp peer mac address can be specified as gateway, if >2 pci slot is supplied, then fall back to io mode even and ignore the peer mac address 
-	if ((index > 2)); then
-	    l3=0
-	elif [[ -z "${peer_mac_west}" || -z "${peer_mac_east}" ]]; then
-	    l3=0
-	else
-	    l3=1
-	fi
+        # only twp peer mac address can be specified as gateway, if >2 pci slot is supplied, then fall back to io mode even and ignore the peer mac address 
+        if ((index > 2)); then
+            l3=0
+        elif [[ -z "${peer_mac_west}" || -z "${peer_mac_east}" ]]; then
+            l3=0
+        else
+            l3=1
+        fi
     fi
 
     cd /root/tgen
+    ./launch-trex.sh --devices=${pci_list}
+    count=60
+    num_ports=0
+    while [ ${count} -gt 0 -a ${num_ports} -lt 2 ]; do
+        sleep 1
+        num_ports=`netstat -tln | grep -E :4500\|:4501 | wc -l`
+        ((count--))
+    done
+    if [ ${num_ports} -eq 2 ]; then
+        echo "trex-server is ready"
+    else
+        echo "ERROR: trex-server could not start properly"
+        cat /tmp/trex.server.out
+        exit 1
+    fi
+
     if [ "$1" == "start" ]; then
-        ./launch-trex.sh --devices=${pci_list}
-        count=60
-        num_ports=0
-        while [ ${count} -gt 0 -a ${num_ports} -lt 2 ]; do
-            sleep 1
-            num_ports=`netstat -tln | grep -E :4500\|:4501 | wc -l`
-            ((count--))
-        done
-        if [ ${num_ports} -eq 2 ]; then
-            echo "trex-server is ready"
-            for size in $(echo ${frame_size} | sed -e 's/,/ /g'); do
-	      if (( l3 == 0)); then
+        for size in $(echo ${frame_size} | sed -e 's/,/ /g'); do
+            if (( l3 == 0)); then
                 ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --rate-tolerance-failure=fail \
                 --rate-unit=% --rate=100
-	      else
+            else
                 ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --dst-macs=${peer_mac_west},${peer_mac_east} --rate-tolerance-failure=fail \
                 --rate-unit=% --rate=100
-	      fi
-            done
-        else
-            echo "ERROR: trex-server could not start properly"
-            cat /tmp/trex.server.out
-            exit 1
-        fi
-    elif [ "$1" == "server" ]; then
-        ./launch-trex.sh --devices=${pci_list} --no-tmux=y
-    elif [ "$1" == "grpc" ]; then
-        num_ports=0
-        while [ ${num_ports} -lt 2 ]; do
-            echo "Waiting for trex-server"
-            sleep 1
-            num_ports=`netstat -tln | grep -E :4500\|:4501 | wc -l`
+            fi
         done
-        echo "trex-server is ready"
-        python server.py
+    elif [ "$1" == "server" ]; then
+        python server.py --mac-list ${mac_list}
     fi
-
 fi
 
 tmux kill-session -t trex 2>/dev/null

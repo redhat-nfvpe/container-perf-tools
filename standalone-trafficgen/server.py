@@ -8,6 +8,8 @@ import re
 import grpc
 import rpc_pb2
 import rpc_pb2_grpc
+import argparse
+
 
 def checkIfProcessRunning(processName):
     '''
@@ -48,7 +50,7 @@ def killProcessByName(processName):
 class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
     def isTrafficgenRunning(self, request, context):
         return rpc_pb2.TrafficgenRunning(isTrafficgenRunning=checkIfProcessRunning("binary-search"))
-    
+
     def getResult(self, request, context):
         pattern = re.compile("^[0-9]+$")
         result = rpc_pb2.Result()
@@ -123,11 +125,14 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
             return rpc_pb2.Success(success=True)
         else:
             return rpc_pb2.Success(success=False)
+    
+    def getMacList(self, request, context):
+        return rpc_pb2.MacList(macList=macList)
 
-def serve():
+def serve(port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     rpc_pb2_grpc.add_TrafficgenServicer_to_server(Trafficgen(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port('[::]:%d' %(port))
     server.start()
     try:
         server.wait_for_termination()
@@ -137,4 +142,20 @@ def serve():
 
 if __name__ == '__main__':
     logging.basicConfig()
-    serve()
+    parser = argparse.ArgumentParser(description='Trafficgen server')
+    parser.add_argument('--mac-list',
+                        dest='mac_list',
+                        help='comma seperated mac list',
+                        default='',
+                        type=str
+                        )
+    parser.add_argument('--port',
+                        dest='port',
+                        help='gRPC port',
+                        default=50051,
+                        type=int
+                        )   
+    args = parser.parse_args()
+    global macList
+    macList = args.mac_list
+    serve(args.port)
