@@ -21,4 +21,4 @@ RUN  yum -y --enablerepo=extras install epel-release git which pciutils wget tmu
     && chmod 777 /root/testpmd-wrapper
 WORKDIR /root
 ENTRYPOINT ["/root/dumb-init", "--"]
-CMD ["/root/testpmd-wrapper", "-pci=86:00.0", "-pci=86:00.1"]
+CMD ["/root/testpmd-wrapper"]

@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -39,6 +40,20 @@ func main() {
 	testpmdPath := flag.String("testpmd-path", "testpmd", "if not in PATH, specify the testpmd location")
 	dpdkDriver := flag.String("dpdk-driver", "vfio-pci", "dpdk driver")
 	flag.Parse()
+	// if pci not specified on CLI, try enviroment vars
+	if len(pci) == 0 {
+		for _, e := range os.Environ() {
+			pair := strings.SplitN(e, "=", 2)
+			if match, _ := regexp.MatchString("PCIDEVICE", pair[0]); match {
+				pci = append(pci, normalizePci(pair[1]))
+			}
+		}
+	}
+	// if still have no pci info, then exit
+	if len(pci) == 0 {
+		log.Fatalf("pci address not provided\n")
+	}
+
 	pciRecord := make(map[string]*pciInfo)
 	if err := setupDpdkPorts(*dpdkDriver, pci, pciRecord); err != nil {
 		log.Fatal(err)
