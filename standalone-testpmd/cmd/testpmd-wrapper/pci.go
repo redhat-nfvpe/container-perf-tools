@@ -64,6 +64,17 @@ func normalizePci(pci string) string {
 	return npci
 }
 
+func loadDriver(driver string) error {
+	log.Printf("loadDriver: %s", driver)
+	cmd := exec.Command("modinfo", driver)
+	if _, err := cmd.Output(); err != nil {
+		cmd = exec.Command("modprobe", driver)
+		_, err = cmd.Output()
+		return err
+	}
+	return nil
+}
+
 func isKernelDevice(pci string) bool {
 	if _, err := os.Stat(pciDeviceDir + pci + "/net"); !os.IsNotExist(err) {
 		log.Printf("isKernelDevice: %s is kernel port", pci)
@@ -133,6 +144,7 @@ func getDriverFromDeviceVendor(vendor string, device string) (*kdDrivers, error)
 
 func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo) error {
 	log.Printf("setupPorts: %+q\n", pci)
+	loadDriver(dpdkDriver)
 	for _, p := range pci {
 		log.Printf("setupPorts: %s\n", p)
 		info := &pciInfo{}
