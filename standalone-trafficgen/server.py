@@ -109,7 +109,7 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
                           "--frame-size=%d" % request.frame_size,
                           "--max-loss-pct=%f" % request.max_loss_pct,
                           "--sniff-runtime=%d" % request.sniff_runtime,
-                          "--search-granularity=1.0",
+                          "--search-granularity=%f" % request.search_granularity,
                           "--rate-tolerance-failure=fail"])
         else:
             subprocess.Popen(["./binary-search.py", "--traffic-generator=trex-txrx",
@@ -121,7 +121,7 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
                           "--frame-size=%d" % request.frame_size,
                           "--max-loss-pct=%f" % request.max_loss_pct,
                           "--sniff-runtime=%d" % request.sniff_runtime,
-                          "--search-granularity=1.0",
+                          "--search-granularity=%f" % request.search_granularity,
                           "--rate-tolerance-failure=fail"])
         if checkIfProcessRunning("binary-search"):
             return rpc_pb2.Success(success=True)

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\trpc.proto\x12\ntrafficgen\"\x1b\n\x19IsTrafficgenRunningParams\"\x19\n\x17IsResultAvailableParams\"\x11\n\x0fGetResultParams\"\x16\n\x14StopTrafficgenParams\"\x12\n\x10GetMacListParams\"0\n\x11TrafficgenRunning\x12\x1b\n\x13isTrafficgenRunning\x18\x01 \x01(\x08\",\n\x0fResultAvailable\x12\x19\n\x11isResultAvailable\x18\x01 \x01(\x08\"\x1a\n\x07Success\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x1a\n\x07MacList\x12\x0f\n\x07macList\x18\x01 \x01(\t\"\xd9\x01\n\tPortStats\x12\x11\n\ttx_l1_bps\x18\x01 \x01(\x02\x12\x11\n\ttx_l2_bps\x18\x02 \x01(\x02\x12\x0e\n\x06tx_pps\x18\x03 \x01(\x02\x12\x11\n\trx_l1_bps\x18\x04 \x01(\x02\x12\x11\n\trx_l2_bps\x18\x05 \x01(\x02\x12\x0e\n\x06rx_pps\x18\x06 \x01(\x02\x12\x1a\n\x12rx_latency_minimum\x18\x07 \x01(\x02\x12\x1a\n\x12rx_latency_maximum\x18\x08 \x01(\x02\x12\x1a\n\x12rx_latency_average\x18\t \x01(\x02\x12\x0c\n\x04port\x18\n \x01(\t\".\n\x06Result\x12$\n\x05stats\x18\x01 \x03(\x0b\x32\x15.trafficgen.PortStats\"\xd0\x01\n\x12\x42inarySearchParams\x12\x16\n\x0esearch_runtime\x18\x01 \x01(\x05\x12\x1a\n\x12validation_runtime\x18\x02 \x01(\x05\x12\x11\n\tnum_flows\x18\x03 \x01(\x05\x12\x14\n\x0c\x64\x65vice_pairs\x18\x04 \x01(\t\x12\x12\n\nframe_size\x18\x05 \x01(\x05\x12\x14\n\x0cmax_loss_pct\x18\x06 \x01(\x02\x12\x15\n\rsniff_runtime\x18\x07 \x01(\x05\x12\n\n\x02l3\x18\x08 \x01(\x08\x12\x10\n\x08\x64st_macs\x18\t \x01(\t2\xd0\x03\n\nTrafficgen\x12[\n\x13isTrafficgenRunning\x12%.trafficgen.IsTrafficgenRunningParams\x1a\x1d.trafficgen.TrafficgenRunning\x12U\n\x11isResultAvailable\x12#.trafficgen.IsResultAvailableParams\x1a\x1b.trafficgen.ResultAvailable\x12<\n\tgetResult\x12\x1b.trafficgen.GetResultParams\x1a\x12.trafficgen.Result\x12\x46\n\x0fstartTrafficgen\x12\x1e.trafficgen.BinarySearchParams\x1a\x13.trafficgen.Success\x12G\n\x0estopTrafficgen\x12 .trafficgen.StopTrafficgenParams\x1a\x13.trafficgen.Success\x12?\n\ngetMacList\x12\x1c.trafficgen.GetMacListParams\x1a\x13.trafficgen.MacListb\x06proto3'
+  serialized_pb=b'\n\trpc.proto\x12\ntrafficgen\"\x1b\n\x19IsTrafficgenRunningParams\"\x19\n\x17IsResultAvailableParams\"\x11\n\x0fGetResultParams\"\x16\n\x14StopTrafficgenParams\"\x12\n\x10GetMacListParams\"0\n\x11TrafficgenRunning\x12\x1b\n\x13isTrafficgenRunning\x18\x01 \x01(\x08\",\n\x0fResultAvailable\x12\x19\n\x11isResultAvailable\x18\x01 \x01(\x08\"\x1a\n\x07Success\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x1a\n\x07MacList\x12\x0f\n\x07macList\x18\x01 \x01(\t\"\xd9\x01\n\tPortStats\x12\x11\n\ttx_l1_bps\x18\x01 \x01(\x02\x12\x11\n\ttx_l2_bps\x18\x02 \x01(\x02\x12\x0e\n\x06tx_pps\x18\x03 \x01(\x02\x12\x11\n\trx_l1_bps\x18\x04 \x01(\x02\x12\x11\n\trx_l2_bps\x18\x05 \x01(\x02\x12\x0e\n\x06rx_pps\x18\x06 \x01(\x02\x12\x1a\n\x12rx_latency_minimum\x18\x07 \x01(\x02\x12\x1a\n\x12rx_latency_maximum\x18\x08 \x01(\x02\x12\x1a\n\x12rx_latency_average\x18\t \x01(\x02\x12\x0c\n\x04port\x18\n \x01(\t\".\n\x06Result\x12$\n\x05stats\x18\x01 \x03(\x0b\x32\x15.trafficgen.PortStats\"\xec\x01\n\x12\x42inarySearchParams\x12\x16\n\x0esearch_runtime\x18\x01 \x01(\x05\x12\x1a\n\x12validation_runtime\x18\x02 \x01(\x05\x12\x11\n\tnum_flows\x18\x03 \x01(\x05\x12\x14\n\x0c\x64\x65vice_pairs\x18\x04 \x01(\t\x12\x12\n\nframe_size\x18\x05 \x01(\x05\x12\x14\n\x0cmax_loss_pct\x18\x06 \x01(\x02\x12\x15\n\rsniff_runtime\x18\x07 \x01(\x05\x12\n\n\x02l3\x18\x08 \x01(\x08\x12\x10\n\x08\x64st_macs\x18\t \x01(\t\x12\x1a\n\x12search_granularity\x18\n \x01(\x02\x32\xd0\x03\n\nTrafficgen\x12[\n\x13isTrafficgenRunning\x12%.trafficgen.IsTrafficgenRunningParams\x1a\x1d.trafficgen.TrafficgenRunning\x12U\n\x11isResultAvailable\x12#.trafficgen.IsResultAvailableParams\x1a\x1b.trafficgen.ResultAvailable\x12<\n\tgetResult\x12\x1b.trafficgen.GetResultParams\x1a\x12.trafficgen.Result\x12\x46\n\x0fstartTrafficgen\x12\x1e.trafficgen.BinarySearchParams\x1a\x13.trafficgen.Success\x12G\n\x0estopTrafficgen\x12 .trafficgen.StopTrafficgenParams\x1a\x13.trafficgen.Success\x12?\n\ngetMacList\x12\x1c.trafficgen.GetMacListParams\x1a\x13.trafficgen.MacListb\x06proto3'
 )
 
 
@@ -476,6 +476,13 @@ _BINARYSEARCHPARAMS = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='search_granularity', full_name='trafficgen.BinarySearchParams.search_granularity', index=9,
+      number=10, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -489,7 +496,7 @@ _BINARYSEARCHPARAMS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=565,
-  serialized_end=773,
+  serialized_end=801,
 )
 
 _RESULT.fields_by_name['stats'].message_type = _PORTSTATS
@@ -600,8 +607,8 @@ _TRAFFICGEN = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=776,
-  serialized_end=1240,
+  serialized_start=804,
+  serialized_end=1268,
   methods=[
   _descriptor.MethodDescriptor(
     name='isTrafficgenRunning',

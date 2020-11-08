@@ -141,6 +141,12 @@ if __name__ == '__main__':
                         default=None,
                         type = str,
                         action=DstMacsParse
-                        )    
+                        )
+    parser.add_argument('--search-granularity',
+                        dest="search_granularity",
+                        default=1.0,
+                        type = float,
+                        help="the search granularity in percent of throughput"
+                        )
     args = parser.parse_args()
     run(args)
