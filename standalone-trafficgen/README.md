@@ -20,7 +20,7 @@ test.
 
 ## Podman run example for manual test:
 
-`podman run -it --rm --privileged -v /dev/hugepages:/dev/hugepages -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e pci_list=0000:03:00.0,0000:03:00.1 docker.io/cscojianzhan/trafficgen`
+`podman run -it --rm --privileged -v /dev:/dev -v /sys:/sys -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e pci_list=0000:03:00.0,0000:03:00.1 docker.io/cscojianzhan/trafficgen`
 
 ## Podman run example for automation:
 
@@ -28,7 +28,7 @@ test.
 # start pod with port mapping
 podman pod create -p 50051:50051 -n trafficgen
 # start trex server in this pod
-podman run -d --rm --privileged -v /dev/hugepages:/dev/hugepages -v /lib/modules:/lib/modules --cpuset-cpus 4-11 --pod trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh server
+podman run -d --rm --privileged -v /dev:/dev -v /sys:/sys -v /lib/modules:/lib/modules --cpuset-cpus 4-11 --pod trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  docker.io/cscojianzhan/trafficgen /root/trafficgen_entry.sh server
 ```
 
 In the automation script, start the trafficgen,

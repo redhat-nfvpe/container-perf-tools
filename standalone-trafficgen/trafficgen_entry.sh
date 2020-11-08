@@ -1,15 +1,6 @@
 #!/bin/bash
 # env: peer_mac_west peer_mac_east validation_seconds search_seconds sniff_seconds loss_ratio flows frame_size
 
-function sigfunc() {
-    pid=`pgrep binary-search`
-    [ -z ${pid} ] || kill ${pid}
-    tmux kill-session -t trex 2>/dev/null
-    exit 0
-}
-
-trap sigfunc SIGTERM SIGINT SIGUSR1
-
 validation_seconds=${validation_seconds:-30}
 search_seconds=${search_seconds:-10}
 sniff_seconds=${sniff_seconds:-10}
@@ -18,25 +9,66 @@ flows=${flows:-1}
 frame_size=${frame_size:-64}
 
 pciDeviceDir="/sys/bus/pci/devices"
+pciDriverDir="/sys/bus/pci/drivers"
+
+pciArray=()
+vendor="0x8086"
+device=""
+kmod="i40e"
+
+function bindKmod() {
+    local pci=$1
+    vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
+    device=$(cat ${pciDeviceDir}/${pci}/device)
+    if [[ ${vendor} == "0x8086" ]]; then
+        kmod="i40e"
+    else
+        echo "no kernel module defined for ${pci}"
+        exit 1
+    fi
+    if [[ ! -d ${pciDeviceDir}/${pci}/net ]]; then
+        dpdk-devbind -u ${pci}
+        dpdk-devbind -b ${kmod} ${pci}
+    fi
+}
+
+function bindDpdk() {
+    local pci=$1
+    vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
+    device=$(cat ${pciDeviceDir}/${pci}/device)
+    if [[ -e ${pciDeviceDir}/${pci}/net ]]; then
+        if [[ ${vendor} == "0x8086" ]]; then
+            kmod="i40e"
+	else
+            echo "no kernel module defined for ${pci}"
+            exit 1
+	fi
+	echo ${pci} > ${pciDriverDir}/${kmod}/unbind
+    fi
+    echo "${vendor} ${device}" > ${pciDriverDir}/vfio-pci/new_id
+    echo "${vendor} ${device}" > ${pciDriverDir}/vfio-pci/remove_id
+}
+
+function sigfunc() {
+    pid=`pgrep binary-search`
+    [ -z ${pid} ] || kill ${pid}
+    tmux kill-session -t trex 2>/dev/null
+    for pci in "${pciArray[@]}"; do
+        bindKmod ${pci}
+    done
+    exit 0
+}
 
 modprobe vfio-pci
+
+trap sigfunc SIGTERM SIGINT SIGUSR1
 
 for pci in $(echo ${pci_list} | sed -e 's/,/ /g'); do
     if [[ ${pci} != 0000:* ]]; then
         pci=0000:${pci}
     fi
-    vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
-    device=$(cat ${pciDeviceDir}/${pci}/device)
-    if [ ! -d ${pciDeviceDir}/${pci}/net ]; then
-        if [[ ${vendor} == "0x8086" ]]; then
-            kmod="i40e"
-        else
-            echo "no kernel module defined for ${pci}"
-            exit 1
-        fi
-        dpdk-devbind -u ${pci}
-        dpdk-devbind -b ${kmod} ${pci}
-    fi
+    pciArray+=(${pci})
+    bindKmod ${pci}
     mac=$(cat ${pciDeviceDir}/${pci}/net/*/address)
     echo "mac address for ${pci}: ${mac}"
     if [[ ${mac_list:-""} == "" ]]; then 
@@ -44,6 +76,8 @@ for pci in $(echo ${pci_list} | sed -e 's/,/ /g'); do
     else
         mac_list="${mac_list},${mac}"
     fi
+    #rely on trex to do dpdk bind, so comment out bindDpdk in next line
+    #bindDpdk ${pci}
 done
 
 if [ -z "$1" ]; then
@@ -111,14 +145,14 @@ else
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --rate-tolerance-failure=fail \
-                --rate-unit=% --rate=100
+                --rate-unit=% --rate=100 --search-granularity=1.0
             else
                 ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --dst-macs=${peer_mac_west},${peer_mac_east} --rate-tolerance-failure=fail \
-                --rate-unit=% --rate=100
+                --rate-unit=% --rate=100 --search-granularity=1.0
             fi
         done
     elif [ "$1" == "server" ]; then
@@ -127,5 +161,9 @@ else
 fi
 
 tmux kill-session -t trex 2>/dev/null
+for pci in "${pciArray[@]}"; do
+    bindKmod ${pci}
+done
+ 
 exit 0
 
