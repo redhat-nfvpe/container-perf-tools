@@ -11,18 +11,22 @@ So for the trafficgen, there are too choices,
 test.
 - The common tool set container image. This can only be used for manual test.
 
-## Prerequisites:
+## Prerequisites
 + 2MB or 1GB huge pages
 + isolated CPU for better performance
 + in BIOS, enable VT (cpu virtualization technology)
 + intel_iommu in kernel argument
 + Example kargs: `default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt isolcpus=4-11`
 
-## Podman run example for manual test:
+## Openshift integration demo
+
+[![Watch the video]](https://youtu.be/C5s9DZC3D6c)
+
+## Podman run example for manual test
 
 `podman run -it --rm --privileged -v /dev:/dev -v /sys:/sys -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e pci_list=0000:03:00.0,0000:03:00.1 docker.io/cscojianzhan/trafficgen`
 
-## Podman run example for automation:
+## Podman run example for automation
 
 ```
 # start pod with port mapping
