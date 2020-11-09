@@ -45,10 +45,7 @@ over gRPC.
 
 The protocol buffer is defined in rpc.proto. When there is an update to this file, to 
 re-generate golang code,
-`cd rpc
- protoc --go_out=. --go_opt=paths=source_relative \
-    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-    rpc.proto`
+`cd rpc; protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative rpc.proto`
 
 Other language have their own tool for code generation.
 
