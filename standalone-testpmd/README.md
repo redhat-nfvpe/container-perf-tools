@@ -15,9 +15,11 @@ worrying the update impact to other tools in the common tool set container.
 
 ## Podman run example:
 
-```
-# start testpmd server 
+### start testpmd server 
+
 `podman run -it --rm --privileged -p 9000:9000 -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 5,7,9,11 docker.io/cscojianzhan/testpmd /root/testpmd-wrapper -pci 86:00:0 -pci 86:00:1`
+
+### control testpmd from a client
 
 The sample client can be used to control the testpmd. The client can be on the same machine as the testpmd server or remotely. 
 If running the client remotely, option -server is used to specify the testpmd server address, -grpc-port is used to specify
