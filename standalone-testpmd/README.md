@@ -13,7 +13,11 @@ worrying the update impact to other tools in the common tool set container.
 + intel_iommu in kernel argument
 + Example kargs: `default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt isolcpus=4-11`
 
-## Podman run example:
+## Openshift integration demo
+
+[![Watch the video](https://img.youtube.com/vi/C5s9DZC3D6c/hqdefault.jpg)](https://youtu.be/C5s9DZC3D6c)
+
+## Podman run example
 
 ### start testpmd server 
 
