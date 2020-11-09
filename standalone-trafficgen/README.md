@@ -20,7 +20,7 @@ test.
 
 ## Openshift integration demo
 
-[![Watch the video]](https://youtu.be/C5s9DZC3D6c)
+[![Watch the video](https://img.youtube.com/vi/C5s9DZC3D6c/maxresdefault.jpg)](https://youtu.be/C5s9DZC3D6c)
 
 ## Podman run example for manual test
 
