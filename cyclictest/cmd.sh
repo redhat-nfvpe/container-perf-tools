@@ -3,6 +3,7 @@
 # env vars:
 #	DURATION (default "24h")
 #	DISABLE_CPU_BALANCE (default "n", choice y/n)
+#	INTERVAL (default "1000")
 #	stress (default "false", choices false/true)
 #	rt_priority (default "1")
 
@@ -23,6 +24,10 @@ echo "#####################################"
 echo "**** uid: $UID ****"
 if [[ -z "${DURATION}" ]]; then
 	DURATION="24h"
+fi
+
+if [[ -z "${INTERVAL}" ]]; then
+	INTERVAL="1000"
 fi
 
 if [[ -z "${stress}" ]]; then
@@ -86,9 +91,9 @@ if [[ "$release" = "7" ]]; then
     extra_opt="${extra_opt} -n"
 fi
 
-echo "running cmd: cyclictest -q -D ${DURATION} -p ${rt_priority} -t ${ccount} -a ${cyccore} -h 30 -m ${extra_opt}"
+echo "running cmd: cyclictest -q -D ${DURATION} -p ${rt_priority} -t ${ccount} -a ${cyccore} -h 30 -i ${INTERVAL} -m ${extra_opt}"
 if [ "${manual:-n}" == "n" ]; then
-    cyclictest -q -D ${DURATION} -p ${rt_priority} -t ${ccount} -a ${cyccore} -h 30 -m ${extra_opt}
+    cyclictest -q -D ${DURATION} -p ${rt_priority} -t ${ccount} -a ${cyccore} -h 30 -i ${INTERVAL} -m ${extra_opt}
 else
     sleep infinity
 fi
