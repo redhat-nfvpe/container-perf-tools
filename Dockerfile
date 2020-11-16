@@ -1,9 +1,7 @@
 FROM centos:8
 USER root
 COPY run.sh /root
-COPY rt.repo /etc/yum.repos.d/
-RUN yum -y install rt-tests rteval \
-    && rm -rf /etc/yum.repos.d/rt.repo \
+RUN yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/rt-tests-1.8-11.el8.x86_64.rpm \
     && yum -y --enablerepo=extras install epel-release git which pciutils wget tmux \
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \

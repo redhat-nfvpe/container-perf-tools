@@ -1,0 +1,15 @@
+FROM centos:8
+USER root
+COPY cyclictest/cmd.sh /root
+COPY common-libs /root/common-libs
+RUN yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/rt-tests-1.8-11.el8.x86_64.rpm \
+    && yum -y --enablerepo=extras install epel-release which tmux \
+      python3 numactl-devel kernel-devel numactl-libs \
+    && ln -s $(which python3) /usr/local/bin/python \
+    && yum clean all && rm -rf /var/cache/yum \
+    && curl -L -o /root/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
+    && chmod 777 /root/dumb-init \
+    && chmod 777 /root/cmd.sh
+WORKDIR /root
+ENTRYPOINT ["/root/dumb-init", "--"]
+CMD ["/root/cmd.sh"]

@@ -3,8 +3,8 @@
 # env vars:
 #	DURATION (default "24h")
 #	DISABLE_CPU_BALANCE (default "n", choice y/n)
-#	stress_tool (default "false", choices false/stress-ng/rteval)
-#	rt_priority (default "99")
+#	stress (default "false", choices false/true)
+#	rt_priority (default "1")
 
 source common-libs/functions.sh
 
@@ -25,22 +25,22 @@ if [[ -z "${DURATION}" ]]; then
 	DURATION="24h"
 fi
 
-if [[ -z "${stress_tool}" ]]; then
+if [[ -z "${stress}" ]]; then
 	stress="false"
-elif [[ "${stress_tool}" != "stress-ng" && "${stress_tool}" != "rteval" ]]; then
+elif [[ "${stress}" != "stress-ng" && "${stress}" != "true" ]]; then
 	stress="false"
 else
-	stress=${stress_tool}
+	stress="true"
 fi
 
 if [[ -z "${rt_priority}" ]]; then
-        rt_priority=99
+        rt_priority=1
 elif [[ "${rt_priority}" =~ ^[0-9]+$ ]]; then
 	if (( rt_priority > 99 )); then
 		rt_priority=99
 	fi
 else
-	rt_priority=99
+	rt_priority=1
 fi
 
 release=$(cat /etc/os-release | sed -n -r 's/VERSION_ID="(.).*/\1/p')
@@ -64,16 +64,12 @@ fi
 trap sigfunc TERM INT SIGUSR1
 
 # stress run in each tmux window per cpu
-if [[ "$stress" == "stress-ng" ]]; then
+if [[ "$stress" == "true" ]]; then
     yum install -y stress-ng 2>&1 || { echo >&2 "stress-ng required but install failed. Aborting"; sleep infinity; }
     tmux new-session -s stress -d
     for w in $(seq 1 ${#cpus[@]}); do
         tmux new-window -t stress -n $w "taskset -c ${cpus[$(($w-1))]} stress-ng --cpu 1 --cpu-load 100 --cpu-method loop"
     done
-fi
-
-if [[ "$stress" == "rteval" ]]; then
-	tmux new-session -s stress -d "rteval -v --onlyload"
 fi
 
 cyccore=${cpus[0]}
@@ -96,6 +92,8 @@ if [ "${manual:-n}" == "n" ]; then
 else
     sleep infinity
 fi
+
+sleep infinity
 
 # kill stress before exit 
 tmux kill-session -t stress 2>/dev/null
