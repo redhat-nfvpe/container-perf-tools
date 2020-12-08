@@ -14,8 +14,12 @@ echo "######################################"
 
 [ -n "${GIT_URL}" ] || GIT_URL="https://github.com/redhat-nfvpe/container-perf-tools.git"
 
-echo "git clone ${GIT_URL}"
-git clone ${GIT_URL} /root/container-tools
+# Support for air-gapped use with built-in container-tools
+if [[ ! "${GIT_URL}" == "false" ]]; then
+        echo "git clone ${GIT_URL}"
+        git clone ${GIT_URL} /root/container-tools
+fi
+
 cd /root/container-tools
 
 if [ -d /root/container-tools/$tool ]; then
@@ -33,5 +37,13 @@ else
     echo "tool/cmd.sh not exists, can't continue"
     sleep infinity
 fi
+
+# https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/#configuration
+# The CPU manager periodically writes resource updates through the CRI in order to 
+# reconcile in-memory CPU assignments with cgroupfs. The reconcile frequency is set 
+# through a new Kubelet configuration value --cpu-manager-reconcile-period.
+# If not specified, it defaults to the same duration as --node-status-update-frequency. (10s)
+echo "Pausing for 10s before executing $tool to allow CPU Manager to reconcile cgroups"
+sleep 10
 
 exec /root/dumb-init -- /root/container-tools/$tool/cmd.sh
