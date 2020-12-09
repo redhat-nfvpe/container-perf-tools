@@ -110,7 +110,7 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
                           "--max-loss-pct=%f" % request.max_loss_pct,
                           "--sniff-runtime=%d" % request.sniff_runtime,
                           "--search-granularity=%f" % request.search_granularity,
-                          "--rate-tolerance-failure=fail"])
+                          "--rate-tolerance-failure=fail"] + binary_search_extra_args)
         else:
             subprocess.Popen(["./binary-search.py", "--traffic-generator=trex-txrx",
                           "--device-pairs=%s" % request.device_pairs,
@@ -122,7 +122,7 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
                           "--max-loss-pct=%f" % request.max_loss_pct,
                           "--sniff-runtime=%d" % request.sniff_runtime,
                           "--search-granularity=%f" % request.search_granularity,
-                          "--rate-tolerance-failure=fail"])
+                          "--rate-tolerance-failure=fail"] + binary_search_extra_args)
         if checkIfProcessRunning("binary-search"):
             return rpc_pb2.Success(success=True)
         else:
@@ -156,8 +156,16 @@ if __name__ == '__main__':
                         help='gRPC port',
                         default=50051,
                         type=int
-                        )   
+                        )
+    parser.add_argument('--extra-opts',
+                        dest='extra_opts',
+                        help='extra options for binary search',
+                        default='',
+                        type=str
+                        )
     args = parser.parse_args()
     global macList
+    global binary_search_extra_args
     macList = args.mac_list
+    binary_search_extra_args = args.extra_opts.split()
     serve(args.port)

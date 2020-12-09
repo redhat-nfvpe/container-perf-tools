@@ -27,6 +27,7 @@ def actionStartTrafficgen(args, stub):
             frame_size=args.frame_size,
             max_loss_pct=args.max_loss_pct,
             sniff_runtime=args.sniff_runtime,
+            search_granularity=args.search_granularity,
             l3=l3,
             dst_macs=args.dst_macs
             ))
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--sniff-runtime',
                         dest='sniff_runtime',
                         help='test duration in seconds during sniff phase',
-                        default = 0,
+                        default = 3,
                         type = int
                         )
     parser.add_argument('--max-loss-pct',

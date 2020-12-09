@@ -15,6 +15,7 @@ pciArray=()
 vendor="0x8086"
 device=""
 kmod="i40e"
+vf_extra_opt=""
 
 function bindKmod() {
     local pci=$1
@@ -22,6 +23,10 @@ function bindKmod() {
     device=$(cat ${pciDeviceDir}/${pci}/device)
     if [[ ${vendor} == "0x8086" ]]; then
         kmod="i40e"
+	if [[ "${device}" == "0x154c" ]]; then
+	    kmod="iavf"
+	    vf_extra_opt="--no-promisc --device-stats"
+	fi
     else
         echo "no kernel module defined for ${pci}"
         exit 1
@@ -39,6 +44,9 @@ function bindDpdk() {
     if [[ -e ${pciDeviceDir}/${pci}/net ]]; then
         if [[ ${vendor} == "0x8086" ]]; then
             kmod="i40e"
+	    if [[ "${device}" == "0x154c" ]]; then
+                kmod="iavf"
+	    fi
 	else
             echo "no kernel module defined for ${pci}"
             exit 1
@@ -121,7 +129,8 @@ else
     fi
 
     cd /root/tgen
-    ./launch-trex.sh --devices=${pci_list}
+    isolated_cpus=$(cat /proc/self/status | grep Cpus_allowed_list: | cut -f 2)
+    ./launch-trex.sh --devices=${pci_list} --cpu-list=${isolated_cpus}
     count=60
     num_ports=0
     while [ ${count} -gt 0 -a ${num_ports} -lt 2 ]; do
@@ -145,18 +154,18 @@ else
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --rate-tolerance-failure=fail \
-                --rate-unit=% --rate=100 --search-granularity=1.0
+                --rate-unit=% --rate=100 --search-granularity=1.0 ${vf_extra_opt}
             else
                 ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --dst-macs=${peer_mac_west},${peer_mac_east} --rate-tolerance-failure=fail \
-                --rate-unit=% --rate=100 --search-granularity=1.0
+                --rate-unit=% --rate=100 --search-granularity=1.0 ${vf_extra_opt}
             fi
         done
     elif [ "$1" == "server" ]; then
-        python server.py --mac-list ${mac_list}
+        python server.py --mac-list ${mac_list} --extra-opts "${vf_extra_opt}"
     fi
 fi
 
