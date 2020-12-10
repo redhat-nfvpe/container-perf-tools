@@ -2,13 +2,21 @@ apiVersion: v1
 kind: Pod 
 metadata:
   name: cyclictest 
+  # Disable CPU balance with CRIO (yes this is disabling it)
+  cpu-load-balancing.crio.io: "true"
 spec:
+  # Map to the correct performance class in the cluster (from PAO)
+  runtimeClassName: performance-custom-class
   restartPolicy: Never 
   containers:
   - name: container-perf-tools 
     image: quay.io/jianzzha/perf-tools
     imagePullPolicy: IfNotPresent
+    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     resources:
+      requests:
+        memory: "200Mi"
+        cpu: "4"
       limits:
         memory: "200Mi"
         cpu: "4"
@@ -17,9 +25,10 @@ spec:
       value: "cyclictest"
     - name: DURATION
       value: "1h"
-    - name: DISABLE_CPU_BALANCE
-      value: "y"
-      # DISABLE_CPU_BALANCE requires privileged=true
+    # # Following setting not required in OCP4.6+
+    # - name: DISABLE_CPU_BALANCE
+    #   value: "y"
+    #   # DISABLE_CPU_BALANCE requires privileged=true
     securityContext:
       privileged: true
       #capabilities:
@@ -27,7 +36,6 @@ spec:
       #    - SYS_NICE
       #    - IPC_LOCK
       #    - SYS_RAWIO
-
     volumeMounts:
     - mountPath: /dev/cpu_dma_latency
       name: cstate
