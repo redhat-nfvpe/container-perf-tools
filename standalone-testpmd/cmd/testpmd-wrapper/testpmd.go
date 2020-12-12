@@ -78,6 +78,7 @@ func (t *testpmd) stop() error {
 func (t *testpmd) runCmd(cmd string) (string, error) {
 	t.e.Send(cmd + "\n")
 	output, _, err := t.e.Expect(promptRE, cmdTimeout)
+	log.Println(output)
 	return output, err
 }
 
@@ -124,6 +125,12 @@ func (t *testpmd) getMacAddress(pci string) (string, error) {
 }
 
 func (t *testpmd) setPeerMac(portNum int32, peerMac string) error {
+	if t.running {
+		if _, err := t.runCmd("stop"); err != nil {
+			return err
+		}
+		t.running = false
+	}
 	cmd := fmt.Sprintf("set eth-peer %d %s", portNum, peerMac)
 	_, err := t.runCmd(cmd)
 	return err

@@ -25,7 +25,8 @@ function bindKmod() {
         kmod="i40e"
 	if [[ "${device}" == "0x154c" ]]; then
 	    kmod="iavf"
-	    vf_extra_opt="--no-promisc --device-stats"
+	    vf_extra_opt="--no-promisc --use-device-stats"
+	    #vf_extra_opt="--no-promisc "
 	fi
     else
         echo "no kernel module defined for ${pci}"
@@ -77,13 +78,6 @@ for pci in $(echo ${pci_list} | sed -e 's/,/ /g'); do
     fi
     pciArray+=(${pci})
     bindKmod ${pci}
-    mac=$(cat ${pciDeviceDir}/${pci}/net/*/address)
-    echo "mac address for ${pci}: ${mac}"
-    if [[ ${mac_list:-""} == "" ]]; then 
-        mac_list="${mac}"
-    else
-        mac_list="${mac_list},${mac}"
-    fi
     #rely on trex to do dpdk bind, so comment out bindDpdk in next line
     #bindDpdk ${pci}
 done
@@ -149,23 +143,23 @@ else
     if [ "$1" == "start" ]; then
         for size in $(echo ${frame_size} | sed -e 's/,/ /g'); do
             if (( l3 == 0)); then
-                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
+                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=50 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --rate-tolerance-failure=fail \
-                --rate-unit=% --rate=100 --search-granularity=1.0 ${vf_extra_opt}
+                --rate-unit=% --rate=100 --search-granularity=5.0 --runtime-tolerance=50 --negative-packet-loss=fail ${vf_extra_opt}
             else
-                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=10 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
+                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=50 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --dst-macs=${peer_mac_west},${peer_mac_east} --rate-tolerance-failure=fail \
-                --rate-unit=% --rate=100 --search-granularity=1.0 ${vf_extra_opt}
+                --rate-unit=% --rate=100 --search-granularity=5.0 --runtime-tolerance=50 --negative-packet-loss=fail ${vf_extra_opt}
             fi
         done
     elif [ "$1" == "server" ]; then
-        python server.py --mac-list ${mac_list} --extra-opts "${vf_extra_opt}"
+        python server.py --extra-opts "${vf_extra_opt}"
     fi
 fi
 

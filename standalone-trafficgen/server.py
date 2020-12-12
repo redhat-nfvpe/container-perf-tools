@@ -9,6 +9,10 @@ import grpc
 import rpc_pb2
 import rpc_pb2_grpc
 import argparse
+import sys
+sys.path.append('/opt/trex/current/automation/trex_control_plane/interactive')
+from trex.stl.api import *
+from trex_tg_lib import *
 
 
 def checkIfProcessRunning(processName):
@@ -110,6 +114,9 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
                           "--max-loss-pct=%f" % request.max_loss_pct,
                           "--sniff-runtime=%d" % request.sniff_runtime,
                           "--search-granularity=%f" % request.search_granularity,
+                          "--rate-tolerance=50",
+                          "--runtime-tolerance=50",
+                          "--negative-packet-loss=fail",
                           "--rate-tolerance-failure=fail"] + binary_search_extra_args)
         else:
             subprocess.Popen(["./binary-search.py", "--traffic-generator=trex-txrx",
@@ -121,6 +128,9 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
                           "--frame-size=%d" % request.frame_size,
                           "--max-loss-pct=%f" % request.max_loss_pct,
                           "--sniff-runtime=%d" % request.sniff_runtime,
+                          "--rate-tolerance=50",
+                          "--runtime-tolerance=50",
+                          "--negative-packet-loss=fail",
                           "--search-granularity=%f" % request.search_granularity,
                           "--rate-tolerance-failure=fail"] + binary_search_extra_args)
         if checkIfProcessRunning("binary-search"):
@@ -129,7 +139,17 @@ class Trafficgen(rpc_pb2_grpc.TrafficgenServicer):
             return rpc_pb2.Success(success=False)
     
     def getMacList(self, request, context):
-        return rpc_pb2.MacList(macList=macList)
+        macList = ""
+        try:
+            c = STLClient(server = 'localhost')
+            c.connect()
+            port_info = c.get_port_info(ports = [0, 1])
+            macList = port_info[0]['hw_mac'] + ',' + port_info[1]['hw_mac']
+        except TRexError as e:
+            macList = ""
+        finally:
+            c.disconnect()
+            return rpc_pb2.MacList(macList=macList)
 
 def serve(port):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -145,12 +165,6 @@ def serve(port):
 if __name__ == '__main__':
     logging.basicConfig()
     parser = argparse.ArgumentParser(description='Trafficgen server')
-    parser.add_argument('--mac-list',
-                        dest='mac_list',
-                        help='comma seperated mac list',
-                        default='',
-                        type=str
-                        )
     parser.add_argument('--port',
                         dest='port',
                         help='gRPC port',
@@ -164,8 +178,6 @@ if __name__ == '__main__':
                         type=str
                         )
     args = parser.parse_args()
-    global macList
     global binary_search_extra_args
-    macList = args.mac_list
     binary_search_extra_args = args.extra_opts.split()
     serve(args.port)

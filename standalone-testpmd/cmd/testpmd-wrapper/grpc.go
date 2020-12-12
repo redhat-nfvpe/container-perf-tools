@@ -56,8 +56,9 @@ func (s *server) MacMode(ctx context.Context, in *pb.PeerMacs) (*pb.Success, err
 }
 
 func (s *server) GetPortInfo(ctx context.Context, in *pb.Pci) (*pb.PortInfo, error) {
-	log.Printf("GetPortInfo: %s\n", in.PciAddress)
-	output, err := pTestpmd.getPortInfo(in.PciAddress)
+	pciAddr := normalizePci(in.PciAddress)
+	log.Printf("GetPortInfo: %s\n", pciAddr)
+	output, err := pTestpmd.getPortInfo(pciAddr)
 	if err != nil {
 		return &pb.PortInfo{}, err
 	}

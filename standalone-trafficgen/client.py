@@ -145,7 +145,7 @@ if __name__ == '__main__':
                         )
     parser.add_argument('--search-granularity',
                         dest="search_granularity",
-                        default=1.0,
+                        default=5.0,
                         type = float,
                         help="the search granularity in percent of throughput"
                         )
