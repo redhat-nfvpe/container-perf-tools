@@ -179,5 +179,5 @@ if __name__ == '__main__':
                         )
     args = parser.parse_args()
     global binary_search_extra_args
-    binary_search_extra_args = args.extra_opts.split()
+    binary_search_extra_args = args.extra_opts.strip('\"\'').split()
     serve(args.port)

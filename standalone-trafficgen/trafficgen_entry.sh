@@ -25,8 +25,8 @@ function bindKmod() {
         kmod="i40e"
 	if [[ "${device}" == "0x154c" ]]; then
 	    kmod="iavf"
-	    vf_extra_opt="--no-promisc --use-device-stats"
-	    #vf_extra_opt="--no-promisc "
+	    #vf_extra_opt="--no-promisc --use-device-stats"
+	    vf_extra_opt="--no-promisc"
 	fi
     else
         echo "no kernel module defined for ${pci}"
@@ -159,7 +159,7 @@ else
             fi
         done
     elif [ "$1" == "server" ]; then
-        python server.py --extra-opts "${vf_extra_opt}"
+        python server.py --extra-opts \"${vf_extra_opt}\"
     fi
 fi
 
