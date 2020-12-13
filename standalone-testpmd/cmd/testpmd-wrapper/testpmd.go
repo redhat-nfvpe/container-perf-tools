@@ -143,3 +143,11 @@ func (t *testpmd) listPorts() (string, error) {
 func (t *testpmd) getPortInfo(pci string) (string, error) {
 	return t.runCmd("show device info " + pci)
 }
+
+func (t *testpmd) getFwdInfo() (string, error) {
+	return t.runCmd("show fwd stats all")
+}
+
+func (t *testpmd) clearFwdInfo() (string, error) {
+	return t.runCmd("clear fwd stats all")
+}

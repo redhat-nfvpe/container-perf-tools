@@ -103,3 +103,21 @@ func (s *server) ListPorts(ctx context.Context, in *empty.Empty) (*pb.PortList, 
 	}
 	return &pb.PortList{PortInfo: portInfoArray}, nil
 }
+
+func (s *server) GetFwdInfo(ctx context.Context, in *empty.Empty) (*pb.FwdInfo, error) {
+	log.Printf("GetFwdInfo:\n")
+	output, err := pTestpmd.getFwdInfo()
+	if err != nil {
+		return &pb.FwdInfo{}, err
+	}
+	return &pb.FwdInfo{FwdInfoStr: output}, nil
+}
+
+func (s *server) ClearFwdInfo(ctx context.Context, in *empty.Empty) (*pb.Success, error) {
+	log.Printf("ClearFwdInfo:\n")
+	_, err := pTestpmd.clearFwdInfo()
+	if err != nil {
+		return &pb.Success{Success: false}, err
+	}
+	return &pb.Success{Success: true}, nil
+}

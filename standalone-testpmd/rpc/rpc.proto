@@ -11,6 +11,8 @@ service testpmd {
     rpc IcmpMode(google.protobuf.Empty) returns (Success);
     rpc IoMode(google.protobuf.Empty) returns (Success);
     rpc MacMode(PeerMacs) returns (Success);
+    rpc GetFwdInfo(google.protobuf.Empty) returns (FwdInfo);
+    rpc ClearFwdInfo(google.protobuf.Empty) returns (Success);
 }
 
 message Success {
@@ -42,5 +44,9 @@ message PeerMac {
 
 message PeerMacs {
    repeated PeerMac peerMac = 1;
+}
+
+message FwdInfo {
+   string fwdInfoStr = 1;
 }
 

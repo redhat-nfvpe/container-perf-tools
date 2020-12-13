@@ -24,6 +24,8 @@ type TestpmdClient interface {
 	IcmpMode(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Success, error)
 	IoMode(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Success, error)
 	MacMode(ctx context.Context, in *PeerMacs, opts ...grpc.CallOption) (*Success, error)
+	GetFwdInfo(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FwdInfo, error)
+	ClearFwdInfo(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Success, error)
 }
 
 type testpmdClient struct {
@@ -88,6 +90,24 @@ func (c *testpmdClient) MacMode(ctx context.Context, in *PeerMacs, opts ...grpc.
 	return out, nil
 }
 
+func (c *testpmdClient) GetFwdInfo(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FwdInfo, error) {
+	out := new(FwdInfo)
+	err := c.cc.Invoke(ctx, "/testpmd.testpmd/GetFwdInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testpmdClient) ClearFwdInfo(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Success, error) {
+	out := new(Success)
+	err := c.cc.Invoke(ctx, "/testpmd.testpmd/ClearFwdInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TestpmdServer is the server API for Testpmd service.
 // All implementations must embed UnimplementedTestpmdServer
 // for forward compatibility
@@ -98,6 +118,8 @@ type TestpmdServer interface {
 	IcmpMode(context.Context, *empty.Empty) (*Success, error)
 	IoMode(context.Context, *empty.Empty) (*Success, error)
 	MacMode(context.Context, *PeerMacs) (*Success, error)
+	GetFwdInfo(context.Context, *empty.Empty) (*FwdInfo, error)
+	ClearFwdInfo(context.Context, *empty.Empty) (*Success, error)
 	mustEmbedUnimplementedTestpmdServer()
 }
 
@@ -122,6 +144,12 @@ func (UnimplementedTestpmdServer) IoMode(context.Context, *empty.Empty) (*Succes
 }
 func (UnimplementedTestpmdServer) MacMode(context.Context, *PeerMacs) (*Success, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MacMode not implemented")
+}
+func (UnimplementedTestpmdServer) GetFwdInfo(context.Context, *empty.Empty) (*FwdInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFwdInfo not implemented")
+}
+func (UnimplementedTestpmdServer) ClearFwdInfo(context.Context, *empty.Empty) (*Success, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClearFwdInfo not implemented")
 }
 func (UnimplementedTestpmdServer) mustEmbedUnimplementedTestpmdServer() {}
 
@@ -244,6 +272,42 @@ func _Testpmd_MacMode_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Testpmd_GetFwdInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestpmdServer).GetFwdInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpmd.testpmd/GetFwdInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestpmdServer).GetFwdInfo(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Testpmd_ClearFwdInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestpmdServer).ClearFwdInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpmd.testpmd/ClearFwdInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestpmdServer).ClearFwdInfo(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Testpmd_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "testpmd.testpmd",
 	HandlerType: (*TestpmdServer)(nil),
@@ -271,6 +335,14 @@ var _Testpmd_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MacMode",
 			Handler:    _Testpmd_MacMode_Handler,
+		},
+		{
+			MethodName: "GetFwdInfo",
+			Handler:    _Testpmd_GetFwdInfo_Handler,
+		},
+		{
+			MethodName: "ClearFwdInfo",
+			Handler:    _Testpmd_ClearFwdInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

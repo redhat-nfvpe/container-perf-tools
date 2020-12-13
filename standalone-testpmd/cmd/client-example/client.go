@@ -118,7 +118,19 @@ func main() {
 			log.Fatalf("could not get response: %v", err)
 		}
 		fmt.Printf("portNum: %d, mac: %s, pci: %s\n", r.PortNum, r.MacAddress, r.PciAddress)
+	case "fwd-info":
+		r, err := c.GetFwdInfo(ctx, &empty.Empty{})
+		if err != nil {
+			log.Fatalf("could not get response: %v", err)
+		}
+		fmt.Printf("%s\n", r.FwdInfoStr)
+	case "clear-fwd-info":
+		_, err := c.ClearFwdInfo(ctx, &empty.Empty{})
+		if err != nil {
+			log.Fatalf("could not get response: %v", err)
+		}
+		fmt.Printf("port forwarding info cleared\n")
 	default:
-		fmt.Println("supported commands: get-mac ports port io mac icmp")
+		fmt.Println("supported commands: get-mac ports port io mac icmp fwd-info clear-fwd-info")
 	}
 }
