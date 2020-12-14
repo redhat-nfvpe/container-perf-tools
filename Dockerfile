@@ -3,11 +3,11 @@ USER root
 COPY run.sh /root
 
 # Uncomment for GIT_URL="false" 
-RUN curl -OL https://github.com/redhat-nfvpe/container-perf-tools/archive/master.zip \
+RUN yum install -y unzip && curl -OL https://github.com/redhat-nfvpe/container-perf-tools/archive/master.zip \
 && unzip master.zip && rm -f master.zip \
 && mv container-perf-tools-master /root/container-tools
 
-RUN yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/rt-tests-1.8-11.el8.x86_64.rpm \
+RUN yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/rt-tests-1.9-1.el8.x86_64.rpm \
     && yum -y --enablerepo=extras install epel-release git which pciutils wget tmux \
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \
