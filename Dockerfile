@@ -7,7 +7,8 @@ RUN yum install -y unzip && curl -OL https://github.com/redhat-nfvpe/container-p
 && unzip master.zip && rm -f master.zip \
 && mv container-perf-tools-master /root/container-tools
 
-RUN yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/rt-tests-1.9-1.el8.x86_64.rpm \
+RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/ 2>/dev/null | sed -n -r 's/.*href=\"(rt-tests.*.rpm).*/\1/p') \
+    && yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/${RT_TEST} \
     && yum -y --enablerepo=extras install epel-release git which pciutils wget tmux \
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \
