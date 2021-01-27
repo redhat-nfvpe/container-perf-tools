@@ -200,7 +200,7 @@ else
             fi
         done
     elif [ "$1" == "server" ]; then
-        python server.py --extra-opts \"${vf_extra_opt}\"
+        python3 server.py --extra-opts \"${vf_extra_opt}\"
     fi
 fi
 
