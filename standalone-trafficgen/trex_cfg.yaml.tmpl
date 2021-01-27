@@ -1,0 +1,16 @@
+- version: 2
+  interfaces: ['$NIC1', '$NIC2']
+  limit_memory: 2048 
+  port_info:
+      - ip: 1.1.1.1
+        default_gw: 2.2.2.2
+      - ip: 2.2.2.2
+        default_gw: 1.1.1.1
+
+  platform:
+      master_thread_id: ${master_cpu} 
+      latency_thread_id: ${latency_cpu} 
+      dual_if:
+        - socket: 1
+          threads: [${worker_cpu}]
+

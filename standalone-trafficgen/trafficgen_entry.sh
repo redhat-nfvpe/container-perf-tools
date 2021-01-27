@@ -17,6 +17,24 @@ device=""
 kmod="i40e"
 vf_extra_opt=""
 
+function convert_number_range() {
+    # converts a range of cpus, like "1-3,5" to a list, like "1,2,3,5"
+    local cpu_range=$1
+    local cpus_list=""
+    local cpus=""
+    for cpus in `echo "${cpu_range}" | sed -e 's/,/ /g'`; do
+        if echo "${cpus}" | grep -q -- "-"; then
+            cpus=`echo ${cpus} | sed -e 's/-/ /'`
+            cpus=`seq ${cpus} | sed -e 's/ /,/g'`
+        fi
+        for cpu in ${cpus}; do
+            cpus_list="${cpus_list},${cpu}"
+        done
+    done
+    cpus_list=`echo ${cpus_list} | sed -e 's/^,//'`
+    echo "${cpus_list}"
+}
+
 function bindKmod() {
     local pci=$1
     vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
@@ -123,8 +141,31 @@ else
     fi
 
     cd /root/tgen
+    read -a arrPCI <<< $(echo ${pci_list} | sed -e 's/,/ /g')
+    export NIC1=${arrPCI[0]}
+    export NIC2=${arrPCI[1]}
     isolated_cpus=$(cat /proc/self/status | grep Cpus_allowed_list: | cut -f 2)
-    ./launch-trex.sh --devices=${pci_list} --cpu-list=${isolated_cpus}
+    read -a arrCPU <<< $(convert_number_range ${isolated_cpus} | sed -e 's/,/ /g')
+    export master_cpu=${arrCPU[0]}
+    export latency_cpu=${arrCPU[1]}
+    arrCPU=("${arrCPU[@]:2}")
+    workerCPUs=${#arrCPU[@]}
+    export worker_cpu=$(echo ${arrCPU[@]} | sed -e 's/ /,/g')
+
+    yaml_file=/tmp/trex_cfg.yaml
+    envsubst < trex_cfg.yaml.tmpl > ${yaml_file}
+
+    pushd /opt/trex/current
+    trex_server_cmd="./t-rex-64 -i -c ${workerCPUs} --no-ofed-check --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix trafficgen_trex_"
+    echo "run trex server cmd: ${trex_server_cmd}"
+    echo "trex yaml:"
+    echo "-------------------------------------------------------------------"
+    cat ${yaml_file}
+    echo "-------------------------------------------------------------------"
+    rm -fv /tmp/trex.server.out
+    tmux new-session -d -n server -s trex "bash -c '${trex_server_cmd} | tee /tmp/trex.server.out'"
+    popd
+
     count=60
     num_ports=0
     while [ ${count} -gt 0 -a ${num_ports} -lt 2 ]; do
