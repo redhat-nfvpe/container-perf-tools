@@ -7,7 +7,7 @@ sniff_seconds=${sniff_seconds:-10}
 loss_ratio=${loss_ratio:-0.002}
 flows=${flows:-1}
 frame_size=${frame_size:-64}
-
+page_prefix=trafficgen_trex_
 pciDeviceDir="/sys/bus/pci/devices"
 pciDriverDir="/sys/bus/pci/drivers"
 
@@ -53,6 +53,7 @@ function bindKmod() {
     if [[ ! -d ${pciDeviceDir}/${pci}/net ]]; then
         dpdk-devbind -u ${pci}
         dpdk-devbind -b ${kmod} ${pci}
+        echo "${pci} bound to kernel"
     fi
 }
 
@@ -177,7 +178,8 @@ else
         trex_extra_opt="--mlx5-so"
     fi
 
-    trex_server_cmd="./_t-rex-64-o -i -c ${workerCPUs} --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix trafficgen_trex_ ${trex_extra_opt}"
+    rm -rf /dev/hugepages/${page_prefix}*
+    trex_server_cmd="./t-rex-64 -i -c ${workerCPUs} --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix ${page_prefix} ${trex_extra_opt}"
     echo "run trex server cmd: ${trex_server_cmd}"
     echo "trex yaml:"
     echo "-------------------------------------------------------------------"
