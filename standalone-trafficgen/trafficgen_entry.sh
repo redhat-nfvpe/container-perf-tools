@@ -12,6 +12,8 @@ pciDeviceDir="/sys/bus/pci/devices"
 pciDriverDir="/sys/bus/pci/drivers"
 
 pciArray=()
+#track if each pci already bound to dpdk for recover purpose
+declare -A dpdkBound
 vendor="0x8086"
 device=""
 kmod="i40e"
@@ -43,8 +45,6 @@ function bindKmod() {
         kmod="i40e"
 	if [[ "${device}" == "0x154c" ]]; then
 	    kmod="iavf"
-	    #vf_extra_opt="--no-promisc --use-device-stats"
-	    vf_extra_opt="--no-promisc"
 	fi
     else
         echo "no kernel module defined for ${pci}"
@@ -81,7 +81,9 @@ function sigfunc() {
     [ -z ${pid} ] || kill ${pid}
     tmux kill-session -t trex 2>/dev/null
     for pci in "${pciArray[@]}"; do
-        bindKmod ${pci}
+        if (( ${dpdkBound[$pci]} == 1 )); then
+            bindKmod ${pci}
+        fi
     done
     exit 0
 }
@@ -90,15 +92,6 @@ modprobe vfio-pci
 
 trap sigfunc SIGTERM SIGINT SIGUSR1
 
-for pci in $(echo ${pci_list} | sed -e 's/,/ /g'); do
-    if [[ ${pci} != 0000:* ]]; then
-        pci=0000:${pci}
-    fi
-    pciArray+=(${pci})
-    bindKmod ${pci}
-    #rely on trex to do dpdk bind, so comment out bindDpdk in next line
-    #bindDpdk ${pci}
-done
 
 if [ -z "$1" ]; then
     # do nothing
@@ -114,6 +107,21 @@ else
                 exit 1
             fi
         fi
+
+        for pci in $(echo ${pci_list} | sed -e 's/,/ /g'); do
+            if [[ ${pci} != 0000:* ]]; then
+                pci=0000:${pci}
+            fi
+            pciArray+=(${pci})
+            vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
+            device=$(cat ${pciDeviceDir}/${pci}/device)
+            if [[ -e ${pciDeviceDir}/${pci}/net ]]; then
+                dpdkBound["$pci"]=0
+            else
+                dpdkBound["$pci"]=1
+            fi
+        done
+
         # how many devices?
         number_of_devices=$(echo ${pci_list} | sed -e 's/,/ /g' | wc -w)
         if [ ${number_of_devices} -lt 2 ]; then
@@ -156,7 +164,20 @@ else
     envsubst < trex_cfg.yaml.tmpl > ${yaml_file}
 
     pushd /opt/trex/current
-    trex_server_cmd="./t-rex-64 -i -c ${workerCPUs} --no-ofed-check --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix trafficgen_trex_"
+    if [[ "${vendor}" == "0x8086" ]]; then
+	if [[ "${device}" == "0x154c" ]]; then
+	    #vf_extra_opt="--no-promisc --use-device-stats"
+	    vf_extra_opt="--no-promisc"
+	fi
+        trex_extra_opt=""
+    elif [[ "${vendor}" == "0x15b3" ]]; then
+        if [[ "${device}" == "0x1018" ]]; then
+            vf_extra_opt="--no-promisc"
+        fi
+        trex_extra_opt="--mlx5-so"
+    fi
+
+    trex_server_cmd="./_t-rex-64-o -i -c ${workerCPUs} --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix trafficgen_trex_ ${trex_extra_opt}"
     echo "run trex server cmd: ${trex_server_cmd}"
     echo "trex yaml:"
     echo "-------------------------------------------------------------------"
@@ -206,7 +227,9 @@ fi
 
 tmux kill-session -t trex 2>/dev/null
 for pci in "${pciArray[@]}"; do
-    bindKmod ${pci}
+    if (( ${dpdkBound[$pci]} == 1 )); then
+        bindKmod ${pci}
+    fi
 done
  
 exit 0

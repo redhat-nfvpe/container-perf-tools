@@ -1,6 +1,6 @@
 FROM centos:7
 
-ENV TREX_VER "v2.82"
+ENV TREX_VER "v2.87"
 
 RUN yum -y --enablerepo=extras install epel-release dpdk dpdk-tools \
        		pciutils which \
@@ -16,11 +16,11 @@ RUN pip install --upgrade "pip < 21.0" \
        && mkdir -p /opt/trex \
        && mkdir -p /var/log/tgen \
        && mkdir -p /root/tgen \
-       && curl -o /root/tgen/binary-search.py https://raw.githubusercontent.com/atheurer/trafficgen/master/binary-search.py \
-       && curl -o /root/tgen/trex_tg_lib.py https://raw.githubusercontent.com/atheurer/trafficgen/master/trex_tg_lib.py \
-       && curl -o /root/tgen/trex-txrx.py https://raw.githubusercontent.com/atheurer/trafficgen/master/trex-txrx.py \
-       && curl -o /root/tgen/trex-query.py https://raw.githubusercontent.com/atheurer/trafficgen/master/trex-query.py \
-       && curl -o /root/tgen/tg_lib.py https://raw.githubusercontent.com/atheurer/trafficgen/master/tg_lib.py \
+       && curl -o /root/tgen/binary-search.py https://raw.githubusercontent.com/atheurer/trafficgen/crucible1/binary-search.py \
+       && curl -o /root/tgen/trex_tg_lib.py https://raw.githubusercontent.com/atheurer/trafficgen/crucible1/trex_tg_lib.py \
+       && curl -o /root/tgen/trex-txrx.py https://raw.githubusercontent.com/atheurer/trafficgen/crucible1/trex-txrx.py \
+       && curl -o /root/tgen/trex-query.py https://raw.githubusercontent.com/atheurer/trafficgen/crucible1/trex-query.py \
+       && curl -o /root/tgen/tg_lib.py https://raw.githubusercontent.com/atheurer/trafficgen/crucible1/tg_lib.py \
        && curl -k -o $TREX_VER.tar.gz https://trex-tgn.cisco.com/trex/release/$TREX_VER.tar.gz \
        && tar xzf $TREX_VER.tar.gz -C /opt/trex && ln -sf /opt/trex/${TREX_VER} /opt/trex/current \
        && rm -f $TREX_VER.tar.gz \
