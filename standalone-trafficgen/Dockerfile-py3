@@ -30,7 +30,9 @@ RUN python3 -m pip install --upgrade pip \
 COPY server.py rpc.proto trex_cfg.yaml.tmpl /root/tgen/
 RUN pushd /root/tgen && python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto && rm rpc.proto && popd
 COPY trafficgen_entry.sh /root/
-RUN chmod 777 /root/trafficgen_entry.sh /root/tgen/binary-search.py /root/tgen/trex-query.py /root/tgen/trex-txrx.py
+RUN chmod 777 /root/trafficgen_entry.sh /root/tgen/binary-search.py /root/tgen/trex-query.py /root/tgen/trex-txrx.py \
+       && ln -f -s /bin/python3 /bin/python \
+       && ln -f -s /usr/bin/python3 /usr/bin/python
 
 ENTRYPOINT ["/root/dumb-init", "--"]
 CMD ["/root/trafficgen_entry.sh", "start"]
