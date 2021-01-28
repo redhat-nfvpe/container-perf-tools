@@ -86,6 +86,7 @@ function sigfunc() {
             bindKmod ${pci}
         fi
     done
+    rm -rf /dev/hugepages/${page_prefix}*
     exit 0
 }
 
@@ -232,6 +233,7 @@ for pci in "${pciArray[@]}"; do
     if (( ${dpdkBound[$pci]} == 1 )); then
         bindKmod ${pci}
     fi
+    rm -rf /dev/hugepages/${page_prefix}*
 done
  
 exit 0
