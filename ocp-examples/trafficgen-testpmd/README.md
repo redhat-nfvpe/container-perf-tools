@@ -30,11 +30,9 @@ oc logs testpmd
 
 The testpmd-client can be used to control the testpmd,
 ```
-cd ../standalone-testpmd/cmd/testpmd-wrapper
-go build
 # use -server to sepcify the worker node where the testpmd pod is running on
 # the -grpc-port should be specified as in the service-testpmd.yaml
-./client-example -server worker1 -grpc-port 32360 ports
+./testpmd-client -server worker1 -grpc-port 32360 ports
 ```
 
 This should return the mac address used by the testpmd.
@@ -50,26 +48,37 @@ Once the pod is running, to watch the trafficgen log,
 oc logs trafficgen
 ```
 
+Before running the sample python client, install the necessary dependancy in a virtual env,
+```
+pip3 install -U virtualenv
+virtualenv -p python3 venv
+source venv/bin/activate
+python3 -m pip install --upgrade pip \
+       && python3 -m pip install --upgrade setuptools wheel \
+       && python3 -m pip install grpcio \
+       && python3 -m pip install grpcio-tools
+```
+
 To get the mac address used by the trafficgen,
 ```
-python standalone-trafficgen/client.py --server-addr worker2 --server-port 32361 get-mac
+python3 client.py --server-addr worker2 --server-port 32361 get-mac
 ```
 
 ## Run test
 
 ```
 # trafficgen-mac1 and trafficgen-mac2 are acquired first before running this step
-./client-example -server worker1 -grpc-port 32360 -peer-mac 0,<trafficgen-mac1> -peer-mac 1,<trafficgen-mac2> mac
+./testpmd-client -server worker1 -grpc-port 32360 -peer-mac 0,<trafficgen-mac1> -peer-mac 1,<trafficgen-mac2> mac
 # testpmd-mac1 and testpmd-mac2 are aquired before running this step
-python standalone-trafficgen/client.py --server-addr worker2 --server-port 32361 --dst-macs <testpmd_mac1,testpmd_mac2> start
+python3 client.py --server-addr worker2 --server-port 32361 --dst-macs <testpmd_mac1,testpmd_mac2> start
 ```
 
 To check the trafficgen running status,
 ```
-python standalone-trafficgen/client.py --server-addr worker2 --server-port 32361 status
+python3 client.py --server-addr worker2 --server-port 32361 status
 ```
 
 Once the trafficgen has completed, to get the test result,
 ```
-python standalone-trafficgen/client.py --server-addr worker2 --server-port 32361 get-result
+python3 client.py --server-addr worker2 --server-port 32361 get-result
 ```
