@@ -2,7 +2,8 @@ FROM centos:8
 USER root
 COPY cyclictest/cmd.sh /root
 COPY common-libs /root/common-libs
-RUN yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/rt-tests-1.8-11.el8.x86_64.rpm \
+RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/ 2>/dev/null | sed -n -r 's/.*href=\"(rt-tests.*.rpm).*/\1/p') \
+    && yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/${RT_TEST} \
     && yum -y --enablerepo=extras install epel-release which tmux \
       python3 numactl-devel kernel-devel kernel-tools numactl-libs \
     && ln -s $(which python3) /usr/local/bin/python \
