@@ -82,7 +82,7 @@ function sigfunc() {
     [ -z ${pid} ] || kill ${pid}
     tmux kill-session -t trex 2>/dev/null
     for pci in "${pciArray[@]}"; do
-        if (( ${dpdkBound[$pci]} == 1 )); then
+        if (( ${dpdkBound[$pci]} == 0 )); then
             bindKmod ${pci}
         fi
     done
@@ -117,10 +117,10 @@ else
             pciArray+=(${pci})
             vendor=$(cat ${pciDeviceDir}/${pci}/vendor)
             device=$(cat ${pciDeviceDir}/${pci}/device)
-            if [[ -e ${pciDeviceDir}/${pci}/net ]]; then
-                dpdkBound["$pci"]=0
-            else
+            if [[ ! -e ${pciDeviceDir}/${pci}/net ]]; then
                 dpdkBound["$pci"]=1
+            else
+                dpdkBound["$pci"]=0
             fi
         done
 
@@ -232,7 +232,7 @@ fi
 
 tmux kill-session -t trex 2>/dev/null
 for pci in "${pciArray[@]}"; do
-    if (( ${dpdkBound[$pci]} == 1 )); then
+    if (( ${dpdkBound[$pci]} == 0 )); then
         bindKmod ${pci}
     fi
     rm -rf /dev/hugepages/${page_prefix}*
