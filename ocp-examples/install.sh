@@ -10,6 +10,6 @@ cp ${SCRIPTPATH}/cyclictest/pod_cyclictest.yaml ~/perf-test/
 pushd ${SCRIPTPATH}/../standalone-testpmd/cmd/client-example
 go build && cp client-example ~/perf-test/testpmd-client
 popd
-cp ${SCRIPTPATH}/../standalone-trafficgen/client.py ~/perf-test/
+cp ${SCRIPTPATH}/../standalone-trafficgen/{client.py,rpc_pb2_grpc.py,rpc_pb2.py} ~/perf-test/
 
 
