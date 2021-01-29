@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trafficgen
+spec:
+  type: NodePort
+  selector:
+    run: trafficgen
+  ports:
+    - port: 50051
+      targetPort: 50051
+      # By default and for convenience, the Kubernetes control plane will allocate a port from a range (default: 30000-32767)
+      nodePort: 32361

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: testpmd 
+spec:
+  type: NodePort
+  selector:
+    run: testpmd 
+  ports:
+    - port: 9000 
+      targetPort: 9000 
+      # By default and for convenience, the Kubernetes control plane will allocate a port from a range (default: 30000-32767)
+      nodePort: 32360 

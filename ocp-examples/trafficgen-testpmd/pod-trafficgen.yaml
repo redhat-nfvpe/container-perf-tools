@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: trafficgen
+  labels:
+    run: trafficgen
+  annotations:
+    k8s.v1.cni.cncf.io/networks: "sriov-intel-west,sriov-intel-east"
+spec:
+  restartPolicy: Never
+  containers:
+  - name: trafficgen
+    image: quay.io/jianzzha/trafficgen
+    #imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
+    args: ["/root/trafficgen_entry.sh", "server"] 
+    #args: ["sleep", "infinity"]
+    ports:
+    - containerPort: 50051 
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /dev/hugepages
+      name: hugepage
+    - mountPath: /sys
+      name: sys
+    - mountPath: /lib/modules
+      name: modules
+    - mountPath: /dev
+      name: dev
+    resources:
+      limits:
+        cpu: 6
+        hugepages-1Gi: 2Gi
+        memory: 2Gi
+      requests:
+        cpu: 6
+        hugepages-1Gi: 2Gi
+        memory: 2Gi
+  volumes:
+  - name: hugepage
+    emptyDir:
+      medium: HugePages
+  - name: sys
+    hostPath:
+      path: /sys
+  - name: modules
+    hostPath:
+      path: /lib/modules
+  - name: dev
+    hostPath:
+      path: /dev
+
+

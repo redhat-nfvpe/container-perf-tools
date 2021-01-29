@@ -1,0 +1,46 @@
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: cyclictest
+  annotations:
+    cpu-load-balancing.crio.io: "true"
+    irq-load-balancing.crio.io: "true"
+    cpu-quota.crio.io: "true"
+spec:
+  runtimeClassName: performance-cnv-sriov-profile
+  restartPolicy: Never
+  containers:
+  - name: container-perf-tools 
+    image: quay.io/jianzzha/cyclictest 
+    imagePullPolicy: Always 
+    resources:
+      limits:
+        memory: "200Mi"
+        cpu: "4"
+    env:
+    - name: rt_priority
+      value: "1"
+    - name: DURATION
+      value: "30m"
+    - name: DISABLE_CPU_BALANCE
+      value: "n"
+      # DISABLE_CPU_BALANCE requires privileged=true
+    securityContext:
+      #privileged: true
+      capabilities:
+        fsGroup: 0
+        add:
+          - SYS_NICE
+          - IPC_LOCK
+          - SYS_RAWIO
+          - SYS_ADMIN
+    volumeMounts:
+    - mountPath: /dev/cpu_dma_latency
+      name: cstate
+  volumes:
+  - name: cstate
+    hostPath:
+      path: /dev/cpu_dma_latency
+  nodeSelector:
+    node-role.kubernetes.io/worker-cnf: ""
+  

@@ -1,0 +1,5 @@
+apiVersion: node.k8s.io/v1  # RuntimeClass is defined in the node.k8s.io API group
+kind: RuntimeClass
+metadata:
+  name: high-performance
+handler: high-performance

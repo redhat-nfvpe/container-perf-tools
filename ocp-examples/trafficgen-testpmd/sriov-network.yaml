@@ -1,0 +1,19 @@
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-intel-east
+  namespace: openshift-sriov-network-operator
+spec:
+  ipam: "" 
+  resourceName: intelnics1
+  networkNamespace: default
+---
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriov-intel-west
+  namespace: openshift-sriov-network-operator
+spec:
+  ipam: "" 
+  resourceName: intelnics0
+  networkNamespace: default
