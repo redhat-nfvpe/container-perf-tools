@@ -11,10 +11,8 @@ spec:
   containers:
   - name: trafficgen
     image: quay.io/jianzzha/trafficgen
-    #imagePullPolicy: IfNotPresent
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     args: ["/root/trafficgen_entry.sh", "server"] 
-    #args: ["sleep", "infinity"]
     ports:
     - containerPort: 50051 
     securityContext:
@@ -50,5 +48,7 @@ spec:
   - name: dev
     hostPath:
       path: /dev
+  nodeSelector:
+    kubernetes.io/hostname: "worker2"
 
 

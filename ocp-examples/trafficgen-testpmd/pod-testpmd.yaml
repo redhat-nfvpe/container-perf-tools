@@ -48,5 +48,7 @@ spec:
   - name: dev
     hostPath:
       path: /dev
+  nodeSelector:
+    kubernetes.io/hostname: "worker1"
 
 
