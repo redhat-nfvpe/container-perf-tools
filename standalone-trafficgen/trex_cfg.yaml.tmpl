@@ -11,6 +11,6 @@
       master_thread_id: ${master_cpu} 
       latency_thread_id: ${latency_cpu} 
       dual_if:
-        - socket: 1
+        - socket: ${numa_node} 
           threads: [${worker_cpu}]
 

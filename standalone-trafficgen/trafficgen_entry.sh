@@ -151,17 +151,19 @@ else
     fi
 
     cd /root/tgen
-    read -a arrPCI <<< $(echo ${pci_list} | sed -e 's/,/ /g')
-    export NIC1=${arrPCI[0]}
-    export NIC2=${arrPCI[1]}
+    #pciArray is set above, or we can alway use the following line in stead
+    #read -a pciArray <<< $(echo ${pci_list} | sed -e 's/,/ /g')
+    export NIC1=${pciArray[0]}
+    export NIC2=${pciArray[1]}
     isolated_cpus=$(cat /proc/self/status | grep Cpus_allowed_list: | cut -f 2)
-    read -a arrCPU <<< $(convert_number_range ${isolated_cpus} | sed -e 's/,/ /g')
-    export master_cpu=${arrCPU[0]}
-    export latency_cpu=${arrCPU[1]}
-    arrCPU=("${arrCPU[@]:2}")
-    workerCPUs=${#arrCPU[@]}
-    export worker_cpu=$(echo ${arrCPU[@]} | sed -e 's/ /,/g')
-
+    read -a cpuArray <<< $(convert_number_range ${isolated_cpus} | sed -e 's/,/ /g')
+    export master_cpu=${cpuArray[0]}
+    export latency_cpu=${cpuArray[1]}
+    cpuArray=("${cpuArray[@]:2}")
+    workerCPUs=${#cpuArray[@]}
+    export worker_cpu=$(echo ${cpuArray[@]} | sed -e 's/ /,/g')
+    export numa_node=$(cat ${pciDeviceDir}/${NIC1}/numa_node)
+   
     yaml_file=/tmp/trex_cfg.yaml
     envsubst < trex_cfg.yaml.tmpl > ${yaml_file}
 
