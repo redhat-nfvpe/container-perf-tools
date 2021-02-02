@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"path/filepath"
+	"os"
 
 	expect "github.com/google/goexpect"
 	"github.com/lithammer/shortuuid"
@@ -168,4 +170,18 @@ func (t *testpmd) getFwdInfo() (string, error) {
 
 func (t *testpmd) clearFwdInfo() (string, error) {
 	return t.runCmd("clear fwd stats all")
+}
+
+func (t *testpmd) releaseHugePages() error {
+	files, err := filepath.Glob(fmt.Sprintf("/dev/hugepages/%s*", t.filePrefix))
+	if err != nil {
+    		return err
+	}
+
+	for _, f := range files {
+	    	if err := os.Remove(f); err != nil {
+        		return err
+    		}
+	}
+	return nil
 }

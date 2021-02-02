@@ -96,4 +96,5 @@ func main() {
 	if err := restoreKernalPorts(pci, pciRecord); err != nil {
 		log.Fatal(err)
 	}
+	pTestpmd.releaseHugePages()
 }
