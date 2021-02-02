@@ -14,6 +14,8 @@ import (
 const (
 	startTimeout = 60 * time.Second
 	cmdTimeout   = 1 * time.Second
+	// page size in Mbyte per port
+	pageSizePerPort = 1024
 )
 
 var (
@@ -40,8 +42,22 @@ func (t *testpmd) init(pci pciArray, queues int, ring int, testpmdPath string) e
 	}
 	clist := intToString(cset.ToSlice()[:nCores], ",")
 	t.filePrefix = shortuuid.New()
-	// use 1024,1024 so no need to worry about numa node
-	cmd := fmt.Sprintf("%s --socket-mem 1024,1024 -n 4 --proc-type auto", testpmdPath)
+	// setup socket-mem based on pci numa node
+	memNode0, memNode1 := 0, 0
+	for _, p := range pci {
+		if numa, err := getNumaNode(p); err == nil {
+			if numa == 0 {
+				memNode0 += 1024
+			} else if numa == 1 {
+				memNode1 += 1024
+			} else {
+				return fmt.Errorf("Only numa 0,1 are expected but numa %d is detected on pci %s", numa, p)
+			}
+		} else {
+			return err
+		}
+	}
+	cmd := fmt.Sprintf("%s --socket-mem %d,%d -n 4 --proc-type auto", testpmdPath, memNode0, memNode1)
 	cmd = fmt.Sprintf("%s -l %s", cmd, clist)
 	// use a unique file-prefix
 	cmd = fmt.Sprintf("%s --file-prefix %s", cmd, t.filePrefix)

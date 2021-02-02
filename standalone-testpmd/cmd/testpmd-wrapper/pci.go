@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -62,6 +63,14 @@ func normalizePci(pci string) string {
 		npci = pci
 	}
 	return npci
+}
+
+func getNumaNode(pci string) (int, error) {
+	numaStr, err := ioutil.ReadFile(pciDeviceDir + pci + "/numa_node")
+	if err != nil {
+		return -1, err
+	}
+	return strconv.Atoi(strings.TrimSpace(string(numaStr)))
 }
 
 func loadDriver(driver string) error {
