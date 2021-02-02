@@ -133,9 +133,11 @@ func (t *testpmd) getMacAddress(pci string) (string, error) {
 		return "", err
 	}
 	macRe := regexp.MustCompile(`MAC address:\s*(([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})`)
-	mac := macRe.FindStringSubmatch(output)[1]
-	if strings.Contains(mac, ":") {
-		return mac, nil
+	if submatchList := macRe.FindStringSubmatch(output); submatchList != nil {
+		mac := submatchList[1]
+		if strings.Contains(mac, ":") {
+			return mac, nil
+		}
 	}
 	return "", fmt.Errorf("couldn't get mac address for pci slot %s", pci)
 }
