@@ -75,10 +75,14 @@ func getNumaNode(pci string) (int, error) {
 
 func loadDriver(driver string) error {
 	log.Printf("loadDriver: %s", driver)
-	cmd := exec.Command("modinfo", driver)
+	log.Printf("depmod -a")
+	cmd := exec.Command("depmod", "-a")
 	if _, err := cmd.Output(); err != nil {
-		cmd = exec.Command("modprobe", driver)
-		_, err = cmd.Output()
+		return err
+	}
+	log.Printf("modprobe %s", driver)
+	cmd = exec.Command("modprobe", driver)
+	if _, err := cmd.Output(); err != nil {
 		return err
 	}
 	return nil
@@ -153,7 +157,10 @@ func getDriverFromDeviceVendor(vendor string, device string) (*kdDrivers, error)
 
 func setupDpdkPorts(dpdkDriver string, pci pciArray, record map[string]*pciInfo) error {
 	log.Printf("setupPorts: %+q\n", pci)
-	loadDriver(dpdkDriver)
+	if err := loadDriver(dpdkDriver); err != nil {
+		return err
+	}
+
 	for _, p := range pci {
 		log.Printf("setupPorts: %s\n", p)
 		info := &pciInfo{}
