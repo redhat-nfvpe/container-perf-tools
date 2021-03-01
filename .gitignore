@@ -9,11 +9,6 @@
 
 ### Above combination will ignore all files without extension ###
 
-# Ignore files with extension `.class` & `.sm`
-*.class
-*.sm
-*.swp
-
 # Ignore `bin` dir
 bin/
 # or
@@ -27,7 +22,13 @@ bin/
 
 # Unignore all makefile dockerfile
 !*akefile
-!*ockerfile
+!*ockerfile*
+
+# Ignore files with extension `.class` & `.sm` & `.bak`
+*.class
+*.sm
+*.swp
+*.bak
 
 # Ignore a file with extension
 #relative/path/to/dir/filename.extension

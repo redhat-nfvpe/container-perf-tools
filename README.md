@@ -5,16 +5,21 @@ This project contains a set of containerized performance test tool that can be u
 evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency, 
 etc.
 
-## Directory layout
+## Directory layout for all-in-one test container
 
-The tool set is constructed in such a way that the tester has the flexiblity to customize a tool execution without rebuilding the container image. 
+The Dockerfile file under the root directory defines the all-in-one container.
 
-It's expectd each tool will be located in its own directory with name cmd.sh. For example under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with cmd.sh under that directory. The tool script should expect its arguments/options via enviroment variables.
+The all-in-one container is constructed in such a way that the tester has the flexiblity to customize a tool execution without rebuilding the container image. 
+
+For the all-in-one container, it's expectd each tool will be located in its own directory with name cmd.sh. For example under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with cmd.sh under that directory. The tool script should expect its arguments/options via enviroment variables.
 
 The run.sh under the repo root diretory is the entrance for the container image. Once it is started, it will git pull this repo to get the latest tools. It then executes the specified tool based on the yaml specification, with the enviroment variables in the yaml file. The yaml examples for k8s can be found under the sample-yamls/ directory
 
+## Standalone test tool containers
 
-## Getting Started
+Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the dockerfiles can be found under the root directory, suck as Dockerfile-cyclictest, Dockerfile-oslat. Other standalone test containers may have their dockerfiles located in the individual sub directories. Such as the standalone-testpmd and standalone-trafficgen containers. To build those containers one need to go to the individual directory and run docker build. 
+
+## How to run the all-in-one test container 
 
 There are two types of container tool use cases. The first type is to run the performance tool as container 
 image in a Kubernetes cluster and the performance tool will collect and report performance metics of the 
@@ -24,7 +29,7 @@ we need to use this two types together to evaluate the system; for example, to e
 can run a DPDK testpmd container inside Kubernetes cluster, and outside the cluster use trex trafficgen
 container to do binary search in order to evaluate the highest throughput supported by the SRIOV ports.
 
-### common yaml variables
+### common yaml variables for the all-in-one test container
 
 All the test scripts use enviroment varibles as input. There are two types of variables, the first type is common 
 to all tools. The second type is tool specific. Both are defined as name/value pair under the container env spec.
@@ -41,7 +46,7 @@ When the test is complete, to get the test result, use "oc logs" or "kubectl log
 container log. Currently there is a work in progress to kick off the test and present the test result via 
 rest API.
 
-### uperf 
+### uperf test 
 
 uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means the worker need to started first. The ip address of the slave will be entered as input value for env
 varible "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the 
@@ -70,7 +75,7 @@ uperf supports the following enviroment variables:
 + threads: number of threads 
 
 
-### cyclictest
+### cyclictest test
 
 cyclictest is used to evaluate the real time kernel scheduler latency. 
 
@@ -82,7 +87,7 @@ cyclictest supports the following enviroment variables:
 + rt_priority: which rt priority is used to run the cyclictest; default 99
 
 
-### sysjitter
+### sysjitter test
 
 sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
 throughput for high speed network.
@@ -95,7 +100,7 @@ sysjitter supports the following enviroment variables:
 + USE_TASKSET: choice of y/n; if enabled, use taskset to pin the task cpu
 + manual: choice of y/n; if enabled, don't kick off sysjitter, this is for debug purpose
 
-### testpmd
+### testpmd test
 
 testpmd is used to evaluate the system networking performance. The container expects two data ports (other than 
 the default interface) and wires the two ports together via dpdk handling. For higher performance, the testpmd 
@@ -108,7 +113,7 @@ testpmd supports the following enviroment variables:
 + ring_size: ring buffer size, default 2048
 + manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
 
-### trafficgen
+### trafficgen test
 
 trafficgen is used to perform a binary search and find the maximum sustainable throughput. This tool expects 
 two data ports (other than the default interface) and sends the traffic out of one port and expects the traffic 
@@ -134,3 +139,25 @@ Prerequisites:
 Podman run example:
 `podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e tool=trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  -e validation_seconds=10 quay.io/jianzzha/perf-tools`
 
+## How to run the standalone oslat test
+
+oslat supports the following enviroment variables:
++ RUNTIME_SECONDS: test duration in seconds
++ PRIO: RT priority used for the test threads
++ DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
+
+## How to run the standalone cyclictest
+
+cyclictest supports the following enviroment variables:
++ DURATION: test duration, default 24h
++ DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
++ INTERVAL: set cyclictest -i parameter, default 1000
++ rt_priority: set cyclictest thread priority, default 1
+
+## How to run the standalone testpmd
+
+Refer to the [standalone-testpmd directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-testpmd)
+
+## How to run the standalone trafficgen
+
+Refer to the [standalone-trafficgen directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-trafficgen)
