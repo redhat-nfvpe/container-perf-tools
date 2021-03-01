@@ -3,8 +3,8 @@
 # env vars:
 #	RUNTIME_SECONDS (default 10)
 #	DISABLE_CPU_BALANCE (default "n", choices y/n)
-#	USE_TASKSET     (default "n", choice y/n)	
-#       manual (default 'n', choice yn)
+#	PRIO (RT priority, default 1)
+#       manual (default 'n', choice y/n)
 #       delay   (default 0, specify how many second to delay before test start)
 
 source common-libs/functions.sh
@@ -26,8 +26,8 @@ echo "/proc/cmdline:"
 cat /proc/cmdline
 echo "#####################################"
 
-echo "**** uid: $UID ****"
 RUNTIME_SECONDS=${RUNTIME_SECONDS:-10}
+PRIO=${PRIO:-1}
 
 cpulist=`get_allowed_cpuset`
 echo "allowed cpu list: ${cpulist}"
@@ -46,13 +46,6 @@ if [ "${DISABLE_CPU_BALANCE:-n}" == "y" ]; then
 fi
 
 trap sigfunc TERM INT SIGUSR1
-if ! command -v oslat >/dev/null 2>&1; then
-	cd oslat
-	git clone https://github.com/xzpeter/oslat.git
-	cd oslat
-	make 
-	install -t /bin/ oslat
-fi
 
 for cmd in oslat; do
      command -v $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but not installed.  Aborting"; exit 1; }
@@ -74,23 +67,21 @@ if [[ "${sibling}" =~ ^[0-9]+$ ]]; then
 fi
 echo "new cpu list: ${cyccore}"
 
-prefix_cmd=""
-if [ "${USE_TASKSET:-n}" == "y" ]; then
-	prefix_cmd="taskset --cpu-list ${cyccore}"
-fi
  
-echo "cmd to run: oslat --runtime ${RUNTIME_SECONDS} --rtprio ${RTPRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]}"
+echo "cmd to run: oslat -D ${RUNTIME_SECONDS} --rtprio ${PRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]}"
 
 if [ "${manual:-n}" == "y" ]; then
-sleep infinity
+	sleep infinity
 fi
 
-if [ "${delay}:-0}" != "0" ]; then
+if [ "${delay:-0}" != "0" ]; then
 	echo "sleep ${delay} before test"
 	sleep ${delay}
 fi
 
-oslat --runtime ${RUNTIME_SECONDS} --rtprio ${RTPRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]}
+oslat -D ${RUNTIME_SECONDS} --rtprio ${PRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]}
+
+sleep infinity
 
 if [ "${DISABLE_CPU_BALANCE:-n}" == "y" ]; then
 	enable_balance
