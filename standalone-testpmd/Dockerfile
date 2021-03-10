@@ -1,4 +1,4 @@
-FROM golang:1.13.4 as gobuilder
+FROM docker.io/golang:1.13.4 as gobuilder
 COPY . /build
 WORKDIR /build/cmd/testpmd-wrapper
 ENV GO111MODULE=on
