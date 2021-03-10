@@ -1,6 +1,12 @@
+FROM golang:1.13.4 as gobuilder
+COPY . /build
+WORKDIR /build/cmd/testpmd-wrapper
+ENV GO111MODULE=on
+RUN CGO_ENABLED=0 GOOS=linux go build
+
 FROM centos:8
 USER root
-COPY cmd/testpmd-wrapper/testpmd-wrapper /root
+COPY --from=gobuilder /build/cmd/testpmd-wrapper/testpmd-wrapper /root/testpmd-wrapper
 RUN  yum -y --enablerepo=extras install epel-release git which pciutils wget tmux \
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \
