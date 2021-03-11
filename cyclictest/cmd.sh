@@ -86,7 +86,6 @@ while (( $cindex < ${#cpus[@]} )); do
         ccount=$(($ccount + 1))
 done
 
-extra_opt=""
 if [[ "$release" = "7" ]]; then
     extra_opt="${extra_opt} -n"
 fi
