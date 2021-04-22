@@ -1,0 +1,203 @@
+name: CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+jobs:
+  job1:
+    runs-on: [ self-hosted, testpmd ]
+    env:
+      PCI1: 81:00.0
+      PCI2: 81:00.1
+      GOCACHE: /tmp/.cache
+    outputs:
+      output1: ${{ steps.step1.outputs.mac1 }}
+      output2: ${{ steps.step1.outputs.mac2 }}
+      output3: ${{ steps.step1.outputs.conId }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build testpmd image
+      run: |
+          cd standalone-testpmd && docker build . --file Dockerfile --tag testpmd:latest
+
+    - name: Start testpmd
+      run: |
+          echo "conId=$(docker run -d --rm --privileged -p 9000:9000 -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 5,7,9,11 testpmd:latest /root/testpmd-wrapper -pci ${PCI1} -pci ${PCI2})" >> $GITHUB_ENV
+          echo ${conId}
+          if ${conId} ; then
+            echo "flag=true" >> $GITHUB_ENV
+          else
+            echo "flag=false" >> $GITHUB_ENV
+            echo "Port 9000 busy...exiting"
+            exit 1
+          fi
+
+
+    - name: Get port info
+      run: |
+          export PATH=$PATH:/usr/local/go/bin
+          export GOPATH=${GITHUB_WORKSPACE}
+          export "output=$(cd standalone-testpmd/cmd/client-example && go run client.go ports)" >> $GITHUB_ENV
+          echo "mac1=$(echo $output | grep "port number: 0" | awk '{print $5}' | sed 's/.$//')" >> $GITHUB_ENV
+          echo "mac2=$(echo $output | grep "port number: 1" | awk '{print $12}'| sed 's/.$//')" >> $GITHUB_ENV
+
+    - id: step1
+      run: |
+            echo "::set-output name=mac1::${{ env.mac1 }}"
+            echo "::set-output name=mac2::${{ env.mac2 }}"
+            echo "::set-output name=conId::${{ env.conId }}"
+
+
+  job2:
+    runs-on: [ self-hosted, trafficgen ]
+    env:
+      PCI1: 81:00.0
+      PCI2: 81:00.1
+    outputs:
+      output1: ${{ steps.step1.outputs.mac1 }}
+      output2: ${{ steps.step1.outputs.mac2 }}
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Create podgen
+      run: |
+           present=$(podman pod list | grep trafficgen | awk '{print $3}')
+           if [ "$present" == "Running" ] || [ "$present" == "Created" ]; then
+           echo "Pod trafficgen already exists"
+           else
+           podman pod create -p 50051:50051 -n trafficgen
+           fi
+
+    - name: Build
+      run: |
+           podman build . --file standalone-trafficgen/Dockerfile-py3 --tag trafficgen:latest
+
+    - name: Start trafficgen
+      run: |
+           podman run -d --rm --privileged -v /dev:/dev -v /sys:/sys -v /lib/modules:/lib/modules --cpuset-cpus 12-23 -e pci_list=${PCI1},${PCI2}  --pod trafficgen trafficgen:latest /root/trafficgen_entry.sh server
+           conId=$(podman ps | grep trafficgen | awk '{print $1}' | tail -n 1)
+           echo "Waiting for trex-server to start...."
+           flag="true"
+           end=$((SECONDS+50))
+           while [ $SECONDS -lt $end  ]
+           do
+           if  podman logs $conId | grep -q "trex-server is ready"
+           then
+                flag="false"
+                sleep 2
+                break
+           fi
+           done
+
+           if [ "$flag" == "true" ]
+           then
+           echo "Failed to start trex server ..."
+           exit
+           else
+           echo "Trex-server has started"
+           fi
+
+    - name: Get Macs
+      run: |
+           export "output=$(python3 standalone-trafficgen/client.py get-mac)"
+           IFS=',' read -r -a array <<< "$output"
+           echo "mac2=$(echo "${array[1]}")" >> $GITHUB_ENV
+           echo "mac1=$(echo "${array[0]}" | awk '{print $5}')" >> $GITHUB_ENV
+
+    - id: step1
+      run: |
+            echo "::set-output name=mac1::${{ env.mac1 }}"
+            echo "::set-output name=mac2::${{ env.mac2 }}"
+
+  job3:
+      runs-on: [ self-hosted, testpmd ]
+      env:
+        GOCACHE: /tmp/.cache
+      needs: [job2, job1]
+      steps:
+      - uses: actions/checkout@v2
+
+      - name: Start mac mode
+        run: |
+          export PATH=$PATH:/usr/local/go/bin
+          export GOPATH=${GITHUB_WORKSPACE}
+          cd standalone-testpmd/cmd/client-example && go run client.go -peer-mac 0,${{needs.job2.outputs.output1}} -peer-mac 1,${{needs.job2.outputs.output2}} mac
+
+  job4:
+    runs-on: [ self-hosted, trafficgen ]
+    needs: [job3, job1]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Start server
+      run: |
+           python3 standalone-trafficgen/client.py --server-addr localhost --server-port 50051 --dst-macs ${{needs.job1.outputs.output1}},${{needs.job1.outputs.output2}} start
+           python3 standalone-trafficgen/client.py status
+           echo "Waiting for report to be generated...."
+           flag="true"
+           end=$((SECONDS+240))
+           while [ $SECONDS -lt $end  ]
+           do
+           if  python3 standalone-trafficgen/client.py status | grep -q "yes"
+           then
+                flag="false"
+                sleep 1
+                break
+           fi
+           done
+
+           if [ "$flag" == "true" ]
+           then
+           echo "Failed to generate report..."
+           else
+           echo "Report Generated"
+           fi
+
+  job5:
+    runs-on: [ self-hosted, trafficgen ]
+    needs: [job1, job4]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Delete testpmd container
+      run: |
+        python3 standalone-trafficgen/client.py get-result
+        val=$(python3 standalone-trafficgen/client.py get-result | grep "port 0 rx_pps" | awk '{print $4}')
+        if [ "`echo "${val} < 10000000.00" | bc`" -eq 1 ]; then
+            echo "Rx_pps lesser than 1000000"
+            exit
+        else
+            echo "Rx_pps greater than 1000000"
+            echo "Cleaning workspace..."
+        fi
+
+
+  job6:
+    runs-on: [ self-hosted, testpmd ]
+    needs: [job1, job5]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Delete testpmd container
+      run: |
+        docker rm ${{needs.job1.outputs.output3}} -f
+
+
+  job7:
+    runs-on: [ self-hosted, trafficgen ]
+    needs: [job6]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Delete container
+      run: |
+        conId=$(podman ps | grep trafficgen | awk '{print $1}' | tail -n 1)
+        podman kill $conId
+        echo "Deleted container"
