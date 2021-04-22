@@ -2,8 +2,9 @@ apiVersion: v1
 kind: Pod 
 metadata:
   name: sysjitter 
-  # Disable CPU balance with CRIO (yes this is disabling it)
-  cpu-load-balancing.crio.io: "true"
+  annotations:
+    # Disable CPU balance with CRIO (yes this is disabling it)
+    cpu-load-balancing.crio.io: "true"
 spec:
   # Map to the correct performance class in the cluster (from PAO)
   runtimeClassName: performance-custom-class
