@@ -146,6 +146,8 @@ oslat supports the following enviroment variables:
 + PRIO: RT priority used for the test threads
 + DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
 
+A sample pod_oslat.yaml can be found under the sample-yamls directory.
+
 ## How to run the standalone cyclictest
 
 cyclictest supports the following enviroment variables:
@@ -153,6 +155,8 @@ cyclictest supports the following enviroment variables:
 + DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
 + INTERVAL: set cyclictest -i parameter, default 1000
 + rt_priority: set cyclictest thread priority, default 1
+
+A sample pod_cyclictest.yaml can be found under the sample-yamls directory.
 
 ## How to run the standalone testpmd
 
