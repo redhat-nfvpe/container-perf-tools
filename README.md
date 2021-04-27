@@ -141,6 +141,11 @@ Podman run example:
 
 ## How to run the standalone oslat test
 
+Build the oslat container image:
+`podman build -t <your repo tag> -f Dockerfile-oslat .`
+
+A pre-build oslat container image is located at: quay.io/jianzzha/oslat
+
 oslat supports the following enviroment variables:
 + RUNTIME_SECONDS: test duration in seconds
 + PRIO: RT priority used for the test threads
@@ -149,6 +154,9 @@ oslat supports the following enviroment variables:
 A sample pod_oslat.yaml can be found under the sample-yamls directory.
 
 ## How to run the standalone cyclictest
+
+Build the cyclictest container image:
+`podman build -t <your repo tag> -f pod_cyclictest.yaml .`
 
 cyclictest supports the following enviroment variables:
 + DURATION: test duration, default 24h
