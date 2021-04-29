@@ -4,6 +4,7 @@
 #	RUNTIME_SECONDS (default 10)
 #	DISABLE_CPU_BALANCE (default "n", choices y/n)
 #	PRIO (RT priority, default 1)
+#	run_hwlatdetect (default 'n', choice y/n)
 #       manual (default 'n', choice y/n)
 #       delay   (default 0, specify how many second to delay before test start)
 
@@ -16,6 +17,16 @@ function sigfunc() {
 	exit 0
 }
 
+trap sigfunc TERM INT SIGUSR1
+
+RUNTIME_SECONDS=${RUNTIME_SECONDS:-10}
+
+run_hwlatdetect=${run_hwlatdetect:-n}
+if [ "${run_hwlatdetect}" == "y" ]; then
+	hwlatdetect --duration=${RUNTIME_SECONDS} --watch
+	sleep infinity
+fi
+
 echo "############# dumping env ###########"
 env
 echo "#####################################"
@@ -26,7 +37,7 @@ echo "/proc/cmdline:"
 cat /proc/cmdline
 echo "#####################################"
 
-RUNTIME_SECONDS=${RUNTIME_SECONDS:-10}
+
 PRIO=${PRIO:-1}
 
 cpulist=`get_allowed_cpuset`
@@ -44,8 +55,6 @@ cpus=(${cpulist})
 if [ "${DISABLE_CPU_BALANCE:-n}" == "y" ]; then
 	disable_balance
 fi
-
-trap sigfunc TERM INT SIGUSR1
 
 for cmd in oslat; do
      command -v $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but not installed.  Aborting"; exit 1; }

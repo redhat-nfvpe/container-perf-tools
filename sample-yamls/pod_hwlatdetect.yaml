@@ -1,0 +1,32 @@
+apiVersion: v1 
+kind: Pod 
+metadata:
+  name: hwlatdetect 
+spec:
+  restartPolicy: Never
+  containers:
+  - name: hwlatdetect 
+    image: quay.io/jianzzha/oslat 
+    imagePullPolicy: Always 
+    env:
+    - name: RUNTIME_SECONDS 
+      value: "30"
+    - name: run_hwlatdetect
+      value: "y"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /dev/cpu_dma_latency
+      name: cstate
+    - mountPath: /sys/kernel/debug
+      name: debug
+  volumes:
+  - name: cstate
+    hostPath:
+      path: /dev/cpu_dma_latency
+  - name: debug
+    hostPath:
+      path: /sys/kernel/debug
+  nodeSelector:
+    node-role.kubernetes.io/worker-cnf: ""
+  
