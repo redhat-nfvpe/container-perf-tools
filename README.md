@@ -153,6 +153,16 @@ oslat supports the following enviroment variables:
 
 A sample pod_oslat.yaml can be found under the sample-yamls directory.
 
+## How to run hwlatdetect using oslat image
+
+The hwlatdetect can be tested using the pre-build oslat image located at: quay.io/jianzzha/oslat
+
+The following enviroment variables are used for hwlatdetect:
++ run_hwlatdetect: enable the hwlatdetect test
++ RUNTIME_SECONDS: test duration in seconds
+
+A sample pod_hwlatdetect.yaml can be found under the sample-yamls directory.
+
 ## How to run the standalone cyclictest
 
 Build the cyclictest container image:
