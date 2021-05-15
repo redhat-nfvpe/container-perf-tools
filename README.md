@@ -163,6 +163,34 @@ The following enviroment variables are used for hwlatdetect:
 
 A sample pod_hwlatdetect.yaml can be found under the sample-yamls directory.
 
+Below is an example of running it using podman,
+```
+# podman run -it --rm --privileged -v /sys/kernel/debug:/sys/kernel/debug -v /dev/cpu_dma_latency:/dev/cpu_dma_latency --cpuset-cpus 4-11 -e run_hwlatdetect=y -e RUNTIME_SECONDS=10 quay.io/jianzzha/oslat
+Trying to pull quay.io/jianzzha/oslat:latest...
+Getting image source signatures
+Copying blob 8fa15fe25aee done  
+Copying blob 45ac2b80236e done  
+Copying blob 1203ed629be0 done  
+Copying blob 3c72a8ed6814 done  
+Copying config 20558905fc done  
+Writing manifest to image destination
+Storing signatures
+hwlatdetect:  test duration 10 seconds
+   detector: tracer
+   parameters:
+        Latency threshold: 10us
+        Sample window:     1000000us
+        Sample width:      500000us
+     Non-sampling period:  500000us
+        Output File:       None
+
+Starting test
+test finished
+Max Latency: Below threshold
+Samples recorded: 0
+Samples exceeding threshold: 0
+```
+
 ## How to run the standalone cyclictest
 
 Build the cyclictest container image:
