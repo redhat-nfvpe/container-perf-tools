@@ -153,6 +153,85 @@ oslat supports the following enviroment variables:
 
 A sample pod_oslat.yaml can be found under the sample-yamls directory.
 
+Below is an example of running it using podman,
+```
+# podman run -it --rm --privileged -v /dev/cpu_dma_latency:/dev/cpu_dma_latency --cpuset-cpus 4-11 -e PRIO=1 -e RUNTIME_SECONDS=10 quay.io/jianzzha/oslat############# dumping env ###########
+HOSTNAME=25d916f6b7ab
+container=podman
+PWD=/root
+HOME=/root
+PRIO=1
+TERM=xterm
+RUNTIME_SECONDS=10
+SHLVL=1
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+_=/usr/bin/env
+#####################################
+ 
+########## container info ###########
+/proc/cmdline:
+BOOT_IMAGE=(hd0,msdos1)/vmlinuz-4.18.0-240.22.1.rt7.77.el8_3.x86_64 root=/dev/mapper/rhel_dhcp16--231--152-root ro crashkernel=auto resume=/dev/mapper/rhel_dhcp16--231--152-swap rd.lvm.lv=rhel_dhcp16-231-152/root rd.lvm.lv=rhel_dhcp16-231-152/swap default_hugepagesz=1G hugepagesz=1G hugepages=16
+#####################################
+allowed cpu list: 4-11
+25d916f6b7ab 4.18.0-240.22.1.rt7.77.el8_3.x86_64
+removing cpu44 from the cpu list because it is a sibling of cpu4 which will be the cpu-main-thread
+new cpu list: 5,6,7,8,9,10,11
+cmd to run: oslat -D 10 --rtprio 1 --cpu-list 5,6,7,8,9,10,11 --cpu-main-thread 4
+oslat V 1.10
+Total runtime: 		10 seconds
+Thread priority: 	SCHED_FIFO:1
+CPU list: 		5,6,7,8,9,10,11
+CPU for main thread: 	4
+Workload: 		no
+Workload mem: 		0 (KiB)
+Preheat cores: 		7
+
+Pre-heat for 1 seconds...
+Test starts...
+Test completed.
+
+        Core:	 5 6 7 8 9 10 11
+    CPU Freq:	 2493 2493 2493 2493 2493 2493 2493 (Mhz)
+    001 (us):	 426829052 426240622 425949824 426254352 424981992 427600232 426964209
+    002 (us):	 122 2697 991 2901 983 2551 1051
+    003 (us):	 4928 6678 7976 6587 7786 6827 7803
+    004 (us):	 4638 482 924 357 1040 499 950
+    005 (us):	 221 33 6 28 4 22 9
+    006 (us):	 19 28 27 6 13 5 35
+    007 (us):	 55 45 45 35 24 34 40
+    008 (us):	 14 11 10 30 21 30 8
+    009 (us):	 1 0 4 10 23 12 0
+    010 (us):	 1 1 0 3 4 3 0
+    011 (us):	 0 143 0 143 0 143 0
+    012 (us):	 0 0 0 0 1 1 0
+    013 (us):	 0 0 0 0 0 0 0
+    014 (us):	 1 0 0 0 0 0 0
+    015 (us):	 0 0 0 1 0 0 0
+    016 (us):	 0 4 0 39 0 0 0
+    017 (us):	 0 140 0 105 0 144 0
+    018 (us):	 0 0 0 0 0 0 0
+    019 (us):	 0 0 0 0 0 0 0
+    020 (us):	 0 0 0 0 0 0 0
+    021 (us):	 0 0 0 0 0 0 0
+    022 (us):	 0 0 0 0 0 0 0
+    023 (us):	 0 0 0 0 0 0 0
+    024 (us):	 0 0 0 0 0 0 0
+    025 (us):	 0 0 0 0 0 0 0
+    026 (us):	 0 0 0 0 0 0 0
+    027 (us):	 0 0 0 0 0 0 0
+    028 (us):	 0 0 0 0 0 0 0
+    029 (us):	 0 0 0 0 0 0 0
+    030 (us):	 0 0 0 0 0 0 0
+    031 (us):	 0 0 0 0 0 0 0
+    032 (us):	 0 0 0 0 0 0 0 (including overflows)
+     Minimum:	 1 1 1 1 1 1 1 (us)
+     Average:	 1.000 1.000 1.000 1.000 1.000 1.000 1.000 (us)
+     Maximum:	 14 17 9 17 12 17 8 (us)
+     Max-Min:	 13 16 8 16 11 16 7 (us)
+    Duration:	 10.003 10.003 10.003 10.003 10.003 10.003 10.003 (sec)
+
+```
+
 ## How to run hwlatdetect using oslat image
 
 The hwlatdetect can be tested using the pre-build oslat image located at: quay.io/jianzzha/oslat
