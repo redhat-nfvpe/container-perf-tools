@@ -144,12 +144,15 @@ Podman run example:
 Build the oslat container image:
 `podman build -t <your repo tag> -f Dockerfile-oslat .`
 
-A pre-build oslat container image is located at: quay.io/jianzzha/oslat
+A pre-built oslat container image is located at: quay.io/jianzzha/oslat
 
 oslat supports the following enviroment variables:
-+ RUNTIME_SECONDS: test duration in seconds
-+ PRIO: RT priority used for the test threads
++ RUNTIME_SECONDS: test duration in seconds; default 10
++ PRIO: RT priority used for the test threads; default 1
 + DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
++ manual: choice of y/n; if enabled, don't kick off oslat, this is for debug purpose
++ delay: specify how many second to delay before test start; default 0
++ TRACE_THRESHOLD: stop the oslat test when threshold triggered (in usec); no default
 
 A sample pod_oslat.yaml can be found under the sample-yamls directory.
 

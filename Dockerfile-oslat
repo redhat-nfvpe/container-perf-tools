@@ -2,7 +2,7 @@ FROM centos:8
 USER root
 COPY oslat/cmd.sh /root
 COPY common-libs /root/common-libs
-RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/ 2>/dev/null | sed -n -r 's/.*href=\"(rt-tests.*.rpm).*/\1/p') \
+RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/ 2>/dev/null | sed -n -r 's/.*href=\"(rt-tests-2.*.rpm).*/\1/p') \
     && yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/${RT_TEST} \
     && yum -y install which numactl-libs \
     && yum clean all && rm -rf /var/cache/yum \

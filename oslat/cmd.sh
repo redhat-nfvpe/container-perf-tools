@@ -7,6 +7,7 @@
 #	run_hwlatdetect (default 'n', choice y/n)
 #       manual (default 'n', choice y/n)
 #       delay   (default 0, specify how many second to delay before test start)
+#       TRACE_THRESHOLD (no default, stop the oslat test when threshold triggered (in usec))
 
 source common-libs/functions.sh
 
@@ -76,8 +77,14 @@ if [[ "${sibling}" =~ ^[0-9]+$ ]]; then
 fi
 echo "new cpu list: ${cyccore}"
 
- 
-echo "cmd to run: oslat -D ${RUNTIME_SECONDS} --rtprio ${PRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]}"
+extra_args=""
+if [ -n "$TRACE_THRESHOLD" ]; then
+        extra_args="--trace-threshold=$TRACE_THRESHOLD"
+fi
+
+command="oslat -D ${RUNTIME_SECONDS} --rtprio ${PRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]} ${extra_args}"
+
+echo "cmd to run: ${command}"
 
 if [ "${manual:-n}" == "y" ]; then
 	sleep infinity
@@ -88,7 +95,7 @@ if [ "${delay:-0}" != "0" ]; then
 	sleep ${delay}
 fi
 
-oslat -D ${RUNTIME_SECONDS} --rtprio ${PRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]}
+$command
 
 sleep infinity
 
