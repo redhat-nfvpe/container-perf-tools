@@ -3,8 +3,9 @@ kind: Pod
 metadata:
   name: cyclictest 
   annotations:
-    # Disable CPU balance with CRIO (yes this is disabling it)
-    cpu-load-balancing.crio.io: "true"
+    cpu-load-balancing.crio.io: "disable"
+    irq-load-balancing.crio.io: "disable"
+    cpu-quota.crio.io: "disable"
 spec:
   # Map to the correct performance class in the cluster (from PAO)
   # Identify class names with "oc get runtimeclass"
