@@ -1,7 +1,7 @@
 
 # container-perf-tools
 
-This project contains a set of containerized performance test tool that can be used in Kubernetes enviroment to 
+This project contains a set of containerized performance test tools that can be used in Kubernetes environment to 
 evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency, 
 etc.
 
@@ -9,36 +9,44 @@ etc.
 
 The Dockerfile file under the root directory defines the all-in-one container.
 
-The all-in-one container is constructed in such a way that the tester has the flexiblity to customize a tool execution without rebuilding the container image. 
+The all-in-one container is constructed in such a way that the tester has the flexiblity to customize a tool execution 
+without rebuilding the container image. 
 
-For the all-in-one container, it's expectd each tool will be located in its own directory with name cmd.sh. For example under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with cmd.sh under that directory. The tool script should expect its arguments/options via enviroment variables.
+For the all-in-one container, it's expected each tool will be located in its own directory with name cmd.sh. For example 
+under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with 
+cmd.sh under that directory. The tool script should expect its arguments/options via enviroment variables.
 
-The run.sh under the repo root diretory is the entrance for the container image. Once it is started, it will git pull this repo to get the latest tools. It then executes the specified tool based on the yaml specification, with the enviroment variables in the yaml file. The yaml examples for k8s can be found under the sample-yamls/ directory
+The run.sh under the repo root diretory is the entrance for the container image. Once it is started, it will git pull this 
+repo to get the latest tools. It then executes the specified tool based on the yaml specification, with the environment 
+variables in the yaml file. The yaml examples for k8s can be found under the sample-yamls/ directory
 
 ## Standalone test tool containers
 
-Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the dockerfiles can be found under the root directory, suck as Dockerfile-cyclictest, Dockerfile-oslat. Other standalone test containers may have their dockerfiles located in the individual sub directories. Such as the standalone-testpmd and standalone-trafficgen containers. To build those containers one need to go to the individual directory and run docker build. 
+Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the 
+dockerfiles can be found under the root directory, suck as Dockerfile-cyclictest and Dockerfile-oslat. Other standalone test 
+containers may have their dockerfiles located in the individual sub directories, such as the standalone-testpmd and 
+standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
 
 ## How to run the all-in-one test container 
 
 There are two types of container tool use cases. The first type is to run the performance tool as container 
-image in a Kubernetes cluster and the performance tool will collect and report performance metics of the 
+image in a Kubernetes cluster and the performance tool will collect and report performance metrics of the 
 underlying system; this type includes sysjitter, cyclictest, and uperf. The second type lives outside Kubernetes 
-cluster and is used externally to evaluate the Kubernetest cluster; this type includes trex trafficgen. Sometimes 
-we need to use this two types together to evaluate the system; for example, to evaluate the SRIOV throughput, we 
+cluster and is used externally to evaluate the Kubernetes cluster; this type includes trex trafficgen. Sometimes 
+we need to use these two types together to evaluate the system; for example, to evaluate the SRIOV throughput, we 
 can run a DPDK testpmd container inside Kubernetes cluster, and outside the cluster use trex trafficgen
 container to do binary search in order to evaluate the highest throughput supported by the SRIOV ports.
 
 ### common yaml variables for the all-in-one test container
 
-All the test scripts use enviroment varibles as input. There are two types of variables, the first type is common 
-to all tools. The second type is tool specific. Both are defined as name/value pair under the container env spec.
+All the test scripts use enviroment variables as input. There are two types of variables, the first type is common 
+to all tools. The second type is tool specific. Both are defined as name/value pairs under the container env spec.
 
 The common env variables include:
-+ GIT_URL: this points to your github fork of this repository, or this respository if no fork
-+ tool: which performance test to run, essentially it is one of the tool directory name
++ GIT_URL: this points to your github fork of this repository, or this repository if no fork
++ tool: which performance test to run, essentially it is one of the tool directory names
 
-The tool specific variables will be mentioned under each tool sector.
+The tool specific variables will be mentioned under each tool section.
 
 ### test result log
 
@@ -48,9 +56,10 @@ rest API.
 
 ### uperf test 
 
-uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means the worker need to started first. The ip address of the slave will be entered as input value for env
-varible "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the 
-"uperfSlave" value and this is to make the automation easier, for example the worker and master can be started liks this,
+uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means 
+the worker needs to be started first. The ip address of the slave will be entered as input value for env
+variable "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the 
+"uperfSlave" value and this is to make the automation easier, for example the worker and master can be started like this,
 ```
 #!/usr/bin/bash
 if ! oc get pod uperf-slave 1>&2 2>/dev/null; then
@@ -68,7 +77,7 @@ done
 export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
 envsubst < pod-uperf-master.yaml | oc create -f -
 ```
-uperf supports the following enviroment variables:
+uperf supports the following environment variables:
 + tool: uperf, run this uperf tool
 + uperfSlave: the ip address of the worker pod
 + size: the tcp write buffer size
@@ -79,12 +88,13 @@ uperf supports the following enviroment variables:
 
 cyclictest is used to evaluate the real time kernel scheduler latency. 
 
-cyclictest supports the following enviroment variables:
+cyclictest supports the following environment variables:
 + tool: cyclictest, run this cyclictest tool
 + DURATION: how long the cyclictest will be run, default: 24 hours
 + DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs cyclictest will have workload balance disable
-+ stress_tool: choice of false/stress-ng/rteval
-+ rt_priority: which rt priority is used to run the cyclictest; default 99
++ INTERVAL: set cyclictest -i parameter, default 1000
++ stress: choice of false/stress-ng
++ rt_priority: which rt priority is used to run the cyclictest; default 1
 
 
 ### sysjitter test
@@ -92,7 +102,7 @@ cyclictest supports the following enviroment variables:
 sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
 throughput for high speed network.
 
-sysjitter supports the following enviroment variables:
+sysjitter supports the following environment variables:
 + tool: sysjitter, run this sysjitter tool
 + RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
 + THRESHOLD_NS: default 200 ns
@@ -108,7 +118,7 @@ runs in io mode and it doesn't examine the packets and simply forwards packets f
 in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end 
 throughput test.
 
-testpmd supports the following enviroment variables:
+testpmd supports the following environment variables:
 + tool: testpmd, run this testpmd tool
 + ring_size: ring buffer size, default 2048
 + manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
@@ -121,7 +131,7 @@ received on the other port and vice versa. It begins at line rate and automatica
 for next iteration based on the packet loss ratio at last iteration until it finds a traffic rate this has 
 packet loss ratio meets the expectation.
 
-This tool supports the following enviroment variables:
+This tool supports the following environment variables:
 + tool: trafficgen, run this trafficgen tool
 + pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
 + validation_seconds: The final validation test duration, default 30 seconds
@@ -146,7 +156,7 @@ Build the oslat container image:
 
 A pre-built oslat container image is located at: quay.io/jianzzha/oslat
 
-oslat supports the following enviroment variables:
+oslat supports the following environment variables:
 + RUNTIME_SECONDS: test duration in seconds; default 10
 + PRIO: RT priority used for the test threads; default 1
 + DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
@@ -239,7 +249,7 @@ Test completed.
 
 The hwlatdetect can be tested using the pre-build oslat image located at: quay.io/jianzzha/oslat
 
-The following enviroment variables are used for hwlatdetect:
+The following environment variables are used for hwlatdetect:
 + run_hwlatdetect: enable the hwlatdetect test
 + RUNTIME_SECONDS: test duration in seconds
 
@@ -276,12 +286,13 @@ Samples exceeding threshold: 0
 ## How to run the standalone cyclictest
 
 Build the cyclictest container image:
-`podman build -t <your repo tag> -f pod_cyclictest.yaml .`
+`podman build -t <your repo tag> -f Dockerfile-cyclictest .`
 
-cyclictest supports the following enviroment variables:
+cyclictest supports the following environment variables:
 + DURATION: test duration, default 24h
 + DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
 + INTERVAL: set cyclictest -i parameter, default 1000
++ stress: choice of false/stress-ng, default false
 + rt_priority: set cyclictest thread priority, default 1
 
 A sample pod_cyclictest.yaml can be found under the sample-yamls directory.
