@@ -8,11 +8,11 @@ RUN yum -y --enablerepo=extras install epel-release dpdk dpdk-tools \
        		net-tools \
        		tmux gettext
 RUN yum install -y python-pip
-RUN pip install --upgrade "pip < 21.0" \
-       && pip install --upgrade setuptools wheel \
-       && pip install grpcio \
-       && pip install grpcio-tools \
-       && pip install psutil \
+RUN pip install --no-cache-dir --upgrade "pip < 21.0" \
+       && pip install --no-cache-dir --upgrade setuptools wheel \
+       && pip install --no-cache-dir grpcio \
+       && pip install --no-cache-dir grpcio-tools \
+       && pip install --no-cache-dir psutil \
        && mkdir -p /opt/trex \
        && mkdir -p /var/log/tgen \
        && mkdir -p /root/tgen \

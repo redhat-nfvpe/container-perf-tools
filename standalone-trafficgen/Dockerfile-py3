@@ -7,11 +7,11 @@ RUN yum -y --enablerepo=extras install epel-release dpdk dpdk-tools \
        		gcc python3 python3-devel \
        		net-tools \
        		tmux gettext
-RUN python3 -m pip install --upgrade pip \
-       && python3 -m pip install --upgrade setuptools wheel \
-       && python3 -m pip install grpcio \
-       && python3 -m pip install grpcio-tools \
-       && python3 -m pip install psutil \
+RUN python3 -m pip install --no-cache-dir --upgrade pip \
+       && python3 -m pip install --no-cache-dir --upgrade setuptools wheel \
+       && python3 -m pip install --no-cache-dir grpcio \
+       && python3 -m pip install --no-cache-dir grpcio-tools \
+       && python3 -m pip install --no-cache-dir psutil \
        && mkdir -p /opt/trex \
        && mkdir -p /var/log/tgen \
        && mkdir -p /root/tgen \
