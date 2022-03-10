@@ -95,6 +95,7 @@ cyclictest supports the following environment variables:
 + INTERVAL: set cyclictest -i parameter, default 1000
 + stress: choice of false/stress-ng
 + rt_priority: which rt priority is used to run the cyclictest; default 1
++ delay: specify how many seconds to delay before test start; default 0
 
 
 ### sysjitter test

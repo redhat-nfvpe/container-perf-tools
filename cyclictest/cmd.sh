@@ -6,6 +6,7 @@
 #   INTERVAL (default "1000")
 #   stress (default "false", choices false/true)
 #   rt_priority (default "1")
+#   delay (default 0, specify how many seconds to delay before test start)
 
 source common-libs/functions.sh
 
@@ -111,6 +112,10 @@ command="cyclictest -q -D ${DURATION} -p ${rt_priority} -t ${ccount} -a ${cyccor
 
 echo "running cmd: ${command}"
 if [ "${manual:-n}" == "n" ]; then
+    if [ "${delay:-0}" != "0" ]; then
+        echo "sleep ${delay} before test"
+        sleep ${delay}
+    fi
     $command
 else
     sleep infinity

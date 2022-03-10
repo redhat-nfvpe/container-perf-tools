@@ -1,4 +1,4 @@
-FROM centos:8
+FROM ubi8
 USER root
 COPY run.sh /root
 
@@ -9,13 +9,15 @@ RUN yum install -y unzip && curl -OL https://github.com/redhat-nfvpe/container-p
 
 RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/ 2>/dev/null | sed -n -r 's/.*href=\"(rt-tests-2.1-2.*.rpm).*/\1/p') \
     && yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/${RT_TEST} \
-    && yum -y --enablerepo=extras install epel-release git which pciutils wget tmux \
+    && yum -y install git which pciutils wget tmux xz \
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \
       libibverbs libibverbs-devel rdma-core-devel \
       libibverbs-utils mstflint gettext \
-    && yum install -y libaio-devel libattr-devel libbsd-devel libcap-devel libgcrypt-devel \
-    && yum -y --enablerepo=epel-testing install uperf  stress-ng \
+    && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/l/libbsd-0.9.1-4.el8.x86_64.rpm \
+    && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/s/stress-ng-0.12.04-1.el8.x86_64.rpm \
+    && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/u/uperf-1.0.7-1.el8.x86_64.rpm \
+    && yum install -y libaio-devel libattr-devel libcap-devel libgcrypt-devel \
     && curl -L -o dpdk.tar.xz https://fast.dpdk.org/rel/dpdk-20.08.tar.xz \
     && mkdir -p /opt/dpdk && tar -xf dpdk.tar.xz -C /opt/dpdk && rm -rf dpdk.tar.xz \
     && pushd /opt/dpdk/dpdk* && sed -i 's/\(CONFIG_RTE_LIBRTE_MLX5_PMD=\)n/\1y/g' config/common_base \
