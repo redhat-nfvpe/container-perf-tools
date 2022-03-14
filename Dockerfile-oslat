@@ -1,4 +1,4 @@
-FROM centos:8
+FROM ubi8
 USER root
 COPY oslat/cmd.sh /root
 COPY common-libs /root/common-libs
