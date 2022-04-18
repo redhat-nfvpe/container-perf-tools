@@ -2,7 +2,7 @@ FROM ubi8
 USER root
 COPY run.sh /root
 
-# Uncomment for GIT_URL="false" 
+# Uncomment for GIT_URL="false"
 RUN yum install -y unzip && curl -OL https://github.com/redhat-nfvpe/container-perf-tools/archive/master.zip \
 && unzip master.zip && rm -f master.zip \
 && mv container-perf-tools-master /root/container-tools
@@ -13,7 +13,7 @@ RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x8
       diffutils python3 net-tools libtool automake gcc gcc-c++ cmake autoconf \
       unzip python3-six numactl-devel make kernel-devel numactl-libs \
       libibverbs libibverbs-devel rdma-core-devel \
-      libibverbs-utils mstflint gettext \
+      libibverbs-utils mstflint gettext intel-cmt-cat \
     && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/l/libbsd-0.9.1-4.el8.x86_64.rpm \
     && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/s/stress-ng-0.12.04-1.el8.x86_64.rpm \
     && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/u/uperf-1.0.7-1.el8.x86_64.rpm \
