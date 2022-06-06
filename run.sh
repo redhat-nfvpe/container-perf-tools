@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# env vars: GIT_URL (default https://github.com/jianzzha/container-tools.git)
-#           tool (choices: sysjitter/testpmd/cyclictest)
+# env vars: GIT_URL (default https://github.com/redhat-nfvpe/container-perf-tools.git)
+#           tool (choices: sysjitter/testpmd/cyclictest/stress-ng)
 
 function sigfunc() {
 	exit 0
@@ -25,8 +25,8 @@ cd /root/container-tools
 if [ -d /root/container-tools/$tool ]; then
     echo "found tool directory $tool"
 else
-    echo "env 'tool' not specified or tool directory $tool not exists!"
-    echo "availble tool directory:"
+    echo "env 'tool' not specified or tool directory $tool does not exist!"
+    echo "available tool directories:"
     echo "$(ls /root/container-tools)"
     sleep infinity 
 fi
@@ -34,7 +34,7 @@ fi
 if [ -f /root/container-tools/$tool/cmd.sh ]; then
     echo "found $tool/cmd.sh, executing"
 else
-    echo "tool/cmd.sh not exists, can't continue"
+    echo "tool/cmd.sh does not exist, can't continue"
     sleep infinity
 fi
 
