@@ -1,11 +1,7 @@
 FROM ubi8
 USER root
 COPY run.sh /root
-
-# Uncomment for GIT_URL="false"
-RUN yum install -y unzip && curl -OL https://github.com/redhat-nfvpe/container-perf-tools/archive/master.zip \
-&& unzip master.zip && rm -f master.zip \
-&& mv container-perf-tools-master /root/container-tools
+COPY . /root/container-tools
 
 RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/ 2>/dev/null | sed -n -r 's/.*href=\"(rt-tests-2.1-2.*.rpm).*/\1/p') \
     && yum -y install https://www.rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/${RT_TEST} \
@@ -15,7 +11,7 @@ RUN RT_TEST=$(curl -L https://www.rpmfind.net/linux/centos/8-stream/AppStream/x8
       libibverbs libibverbs-devel rdma-core-devel \
       libibverbs-utils mstflint gettext intel-cmt-cat \
     && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/l/libbsd-0.9.1-4.el8.x86_64.rpm \
-    && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/s/stress-ng-0.12.04-1.el8.x86_64.rpm \
+    && yum -y install https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/stress-ng-0.14.00-1.el8.x86_64.rpm \
     && yum -y install https://rpmfind.net/linux/epel/8/Everything/x86_64/Packages/u/uperf-1.0.7-1.el8.x86_64.rpm \
     && yum install -y libaio-devel libattr-devel libcap-devel libgcrypt-devel \
     && curl -L -o dpdk.tar.xz https://fast.dpdk.org/rel/dpdk-20.08.tar.xz \

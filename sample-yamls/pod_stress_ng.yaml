@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: stress-ng
+  annotations:
+    cpu-load-balancing.crio.io: "disable"
+    irq-load-balancing.crio.io: "disable"
+    cpu-quota.crio.io: "disable"
+spec:
+  # Map to the correct performance class in the cluster (from PAO)
+  # Identify class names with "oc get runtimeclass"
+  runtimeClassName: performance-custom-class
+  restartPolicy: Never
+  containers:
+  - name: container-perf-tools
+    image: quay.io/jianzzha/perf-tools
+    imagePullPolicy: IfNotPresent
+    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
+    resources:
+      requests:
+        memory: "200Mi"
+        cpu: "4"
+      limits:
+        memory: "200Mi"
+        cpu: "4"
+    env:
+    # Use this to run tool from inside all-in-one image
+    #- name: GIT_URL
+    #  value: "false"
+    - name: tool
+      value: "stress-ng"
+    - name: DURATION
+      value: "1h"
+    - name: CPU_METHOD
+      value: "matrixprod"
+    - name: CPU_LOAD
+      value: "100"
+    - name: EXTRA_ARGS
+      value: ""
+  nodeSelector:
+    node-role.kubernetes.io/worker-rt: ""

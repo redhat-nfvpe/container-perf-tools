@@ -5,7 +5,13 @@ This project contains a set of containerized performance test tools that can be 
 evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency, 
 etc.
 
-## Directory layout for all-in-one test container
+There are two ways to use these tools:
++ all-in-one test container - A single container that includes all test tools
++ standalone test containers - A separate container for each test tool
+
+## All-in-one test container
+
+### Directory layout
 
 The Dockerfile file under the root directory defines the all-in-one container.
 
@@ -20,14 +26,7 @@ The run.sh under the repo root diretory is the entrance for the container image.
 repo to get the latest tools. It then executes the specified tool based on the yaml specification, with the environment 
 variables in the yaml file. The yaml examples for k8s can be found under the sample-yamls/ directory
 
-## Standalone test tool containers
-
-Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the 
-dockerfiles can be found under the root directory, suck as Dockerfile-cyclictest and Dockerfile-oslat. Other standalone test 
-containers may have their dockerfiles located in the individual sub directories, such as the standalone-testpmd and 
-standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
-
-## How to run the all-in-one test container 
+### How to run the all-in-one test container 
 
 There are two types of container tool use cases. The first type is to run the performance tool as container 
 image in a Kubernetes cluster and the performance tool will collect and report performance metrics of the 
@@ -44,6 +43,9 @@ to all tools. The second type is tool specific. Both are defined as name/value p
 
 The common env variables include:
 + GIT_URL: this points to your github fork of this repository, or this repository if no fork
+  + if the GIT_URL is not set, this repository will be used
+  + if the GIT_URL is set to "false", the tools in the image will be used (air gapped mode)
+
 + tool: which performance test to run, essentially it is one of the tool directory names
 
 The tool specific variables will be mentioned under each tool section.
@@ -83,7 +85,6 @@ uperf supports the following environment variables:
 + size: the tcp write buffer size
 + threads: number of threads 
 
-
 ### cyclictest test
 
 cyclictest is used to evaluate the real time kernel scheduler latency. 
@@ -97,6 +98,16 @@ cyclictest supports the following environment variables:
 + rt_priority: which rt priority is used to run the cyclictest; default 1
 + delay: specify how many seconds to delay before test start; default 0
 
+### stress-ng test
+
+stress-ng is used to load and stress cpus
+
+stress-ng supports the following environment variables:
++ tool: stress-ng, run this stress-ng tool
++ DURATION: how long the stress-ng will be run, default: 24 hours
++ CPU_METHOD: specify a cpu stress method, default: matrixprod
++ CPU_LOAD: load each CPU with P percent loading, default: 100
++ EXTRA_ARGS: passed directly to stress-ng command
 
 ### sysjitter test
 
@@ -150,7 +161,14 @@ Prerequisites:
 Podman run example:
 `podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e tool=trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  -e validation_seconds=10 quay.io/jianzzha/perf-tools`
 
-## How to run the standalone oslat test
+## Standalone test tool containers
+
+Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the 
+dockerfiles can be found under the root directory, suck as Dockerfile-cyclictest and Dockerfile-oslat. Other standalone test 
+containers may have their dockerfiles located in the individual sub directories, such as the standalone-testpmd and 
+standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
+
+### How to run the standalone oslat test
 
 Build the oslat container image:
 `podman build -t <your repo tag> -f Dockerfile-oslat .`
@@ -246,7 +264,7 @@ Test completed.
 
 ```
 
-## How to run hwlatdetect using oslat image
+### How to run hwlatdetect using oslat image
 
 The hwlatdetect can be tested using the pre-build oslat image located at: quay.io/jianzzha/oslat
 
@@ -284,7 +302,7 @@ Samples recorded: 0
 Samples exceeding threshold: 0
 ```
 
-## How to run the standalone cyclictest
+### How to run the standalone cyclictest
 
 Build the cyclictest container image:
 `podman build -t <your repo tag> -f Dockerfile-cyclictest .`
@@ -298,10 +316,23 @@ cyclictest supports the following environment variables:
 
 A sample pod_cyclictest.yaml can be found under the sample-yamls directory.
 
-## How to run the standalone testpmd
+### How to run the standalone stress-ng
+
+Build the stress-ng container image:
+`podman build -t <your repo tag> -f Dockerfile-stress-ng .`
+
+stress-ng supports the following environment variables:
++ DURATION: how long the stress-ng will be run, default: 24 hours
++ CPU_METHOD: specify a cpu stress method, default: matrixprod
++ CPU_LOAD: load each CPU with P percent loading, default: 100
++ EXTRA_ARGS: passed directly to stress-ng command
+
+A sample pod_stress_ng.yaml can be found under the sample-yamls directory.
+
+### How to run the standalone testpmd
 
 Refer to the [standalone-testpmd directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-testpmd)
 
-## How to run the standalone trafficgen
+### How to run the standalone trafficgen
 
 Refer to the [standalone-trafficgen directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-trafficgen)
