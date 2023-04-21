@@ -35,6 +35,9 @@ spec:
       value: "1000"
     - name: delay
       value: "0"
+    - name: TRACE_THRESHOLD
+      value: ""
+      # TRACE_THRESHOLD requires privileged=true and debug volume
     # # Following setting not required in OCP4.6+
     # - name: DISABLE_CPU_BALANCE
     #   value: "y"

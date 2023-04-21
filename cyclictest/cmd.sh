@@ -7,6 +7,7 @@
 #   stress (default "false", choices false/true)
 #   rt_priority (default "1")
 #   delay (default 0, specify how many seconds to delay before test start)
+#   TRACE_THRESHOLD: stop cyclictest when threshold triggered (in usec); no default
 
 source common-libs/functions.sh
 
@@ -106,6 +107,10 @@ echo "new cpu list: ${cyccore}"
 
 if [[ "$release" = "7" ]]; then
     extra_opt="${extra_opt} -n"
+fi
+
+if [[ -n "${TRACE_THRESHOLD}" ]]; then
+    extra_opt="${extra_opt} -b ${TRACE_THRESHOLD} --tracemark"
 fi
 
 command="cyclictest -q -D ${DURATION} -p ${rt_priority} -t ${ccount} -a ${cyccore} -h 30 -i ${INTERVAL} --mainaffinity ${cpus[0]} -m ${extra_opt}"
