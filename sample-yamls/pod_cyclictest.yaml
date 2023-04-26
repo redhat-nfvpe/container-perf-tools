@@ -35,6 +35,9 @@ spec:
       value: "1000"
     - name: delay
       value: "0"
+    - name: TRACE_THRESHOLD
+      value: ""
+      # TRACE_THRESHOLD requires privileged=true and debug volume
     # # Following setting not required in OCP4.6+
     # - name: DISABLE_CPU_BALANCE
     #   value: "y"
@@ -49,10 +52,15 @@ spec:
     volumeMounts:
     - mountPath: /dev/cpu_dma_latency
       name: cstate
+      #- mountPath: /sys/kernel/debug
+      #  name: debug
   volumes:
   - name: cstate
     hostPath:
       path: /dev/cpu_dma_latency
+  #- name: debug
+  #  hostPath:
+  #    path: /sys/kernel/debug
   nodeSelector:
     node-role.kubernetes.io/worker-rt: ""
   

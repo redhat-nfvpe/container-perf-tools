@@ -26,6 +26,13 @@ The run.sh under the repo root diretory is the entrance for the container image.
 repo to get the latest tools. It then executes the specified tool based on the yaml specification, with the environment 
 variables in the yaml file. The yaml examples for k8s can be found under the sample-yamls/ directory
 
+### Unable to build containers due to missing packages
+A valid subscription manager registration is required to resolve some of the packages used by the containers.
+
+The yum process running inside the container will run using container mode and pass through the host's registration to allow resolving all the packages.
+
+If you attempt to build on a host without a valid subscription then some packages will not be able to install and the container build will fail.
+
 ### How to run the all-in-one test container 
 
 There are two types of container tool use cases. The first type is to run the performance tool as container 
@@ -97,6 +104,7 @@ cyclictest supports the following environment variables:
 + stress: choice of false/stress-ng
 + rt_priority: which rt priority is used to run the cyclictest; default 1
 + delay: specify how many seconds to delay before test start; default 0
++ TRACE_THRESHOLD: stop the cyclictest when threshold triggered (in usec); no default
 
 ### stress-ng test
 
@@ -313,6 +321,7 @@ cyclictest supports the following environment variables:
 + INTERVAL: set cyclictest -i parameter, default 1000
 + stress: choice of false/stress-ng, default false
 + rt_priority: set cyclictest thread priority, default 1
++ TRACE_THRESHOLD: stop the cyclictest when threshold triggered (in usec); no default
 
 A sample pod_cyclictest.yaml can be found under the sample-yamls directory.
 
