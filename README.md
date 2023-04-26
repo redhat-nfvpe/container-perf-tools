@@ -321,6 +321,7 @@ cyclictest supports the following environment variables:
 + INTERVAL: set cyclictest -i parameter, default 1000
 + stress: choice of false/stress-ng, default false
 + rt_priority: set cyclictest thread priority, default 1
++ TRACE_THRESHOLD: stop the cyclictest when threshold triggered (in usec); no default
 
 A sample pod_cyclictest.yaml can be found under the sample-yamls directory.
 

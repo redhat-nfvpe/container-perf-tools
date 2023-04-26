@@ -52,10 +52,15 @@ spec:
     volumeMounts:
     - mountPath: /dev/cpu_dma_latency
       name: cstate
+      #- mountPath: /sys/kernel/debug
+      #  name: debug
   volumes:
   - name: cstate
     hostPath:
       path: /dev/cpu_dma_latency
+  #- name: debug
+  #  hostPath:
+  #    path: /sys/kernel/debug
   nodeSelector:
     node-role.kubernetes.io/worker-rt: ""
   
