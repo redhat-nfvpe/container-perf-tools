@@ -168,12 +168,12 @@ else
     envsubst < trex_cfg.yaml.tmpl > ${yaml_file}
 
     pushd /opt/trex/current
+    trex_extra_opt=""
     if [[ "${vendor}" == "0x8086" ]]; then
 	if [[ "${device}" == "0x154c" || "${device}" == "0x1889" ]]; then
 	    #vf_extra_opt="--no-promisc --use-device-stats"
 	    vf_extra_opt="--no-promisc"
 	fi
-        trex_extra_opt=""
     elif [[ "${vendor}" == "0x15b3" ]]; then
         if [[ "${device}" == "0x1018" ]]; then
             vf_extra_opt="--no-promisc"
