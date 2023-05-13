@@ -26,6 +26,19 @@ test.
 
 `podman run -it --rm --privileged -v /dev:/dev -v /sys:/sys -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e pci_list=0000:03:00.0,0000:03:00.1 docker.io/cscojianzhan/trafficgen`
 
+Running the trafficgen on Intel E810 NIC requires an extra mount on /lib/firmware,
+`podman run -it --rm --privileged -v /dev:/dev -v /sys:/sys -v /lib/modules:/lib/modules -v /lib/firmware:/lib/firmware --cpuset-cpus 4-11 -e pci_list=0000:03:00.0,0000:03:00.1 docker.io/cscojianzhan/trafficgen`
+
+The default DDP package is installed under /lib/firmware for the above to work,
+```
+# ls ls /lib/firmware/intel/ice/ddp
+ice.pkg
+```
+
+How to install the DDP packet can be found in Intel's E810 DDP package release note.
+
+The trex version also make a different on E810. With the 2.88 trex version, the E810 PF works but VF does not; with 3.02 trex version, the E810 VF works but PF does not. This is unfortunate, one may have to rebuild the trafficgen container image based on the use case.
+ 
 ## Podman run example for automation
 
 ```

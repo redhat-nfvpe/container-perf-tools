@@ -1,18 +1,17 @@
-FROM centos:7
+FROM docker.io/fedora:29
+USER root
+ENV TREX_VER "v2.88"
 
-ENV TREX_VER "v2.87"
-
-RUN yum -y --enablerepo=extras install epel-release dpdk dpdk-tools \
+RUN yum -y install dpdk dpdk-tools \
        		pciutils which \
-       		gcc python python-devel \
+       		gcc python3 python3-devel \
        		net-tools \
        		tmux gettext
-RUN yum install -y python-pip
-RUN pip install --no-cache-dir --upgrade "pip < 21.0" \
-       && pip install --no-cache-dir --upgrade setuptools wheel \
-       && pip install --no-cache-dir grpcio \
-       && pip install --no-cache-dir grpcio-tools \
-       && pip install --no-cache-dir psutil \
+RUN python3 -m pip install --no-cache-dir --upgrade pip \
+       && python3 -m pip install --no-cache-dir --upgrade wheel \
+       && python3 -m pip install --no-cache-dir grpcio \
+       && python3 -m pip install --no-cache-dir grpcio-tools \
+       && python3 -m pip install --no-cache-dir psutil \
        && mkdir -p /opt/trex \
        && mkdir -p /var/log/tgen \
        && mkdir -p /root/tgen \
@@ -29,9 +28,11 @@ RUN pip install --no-cache-dir --upgrade "pip < 21.0" \
        && chmod +x /root/dumb-init \
        && yum clean all && rm -rf /var/cache/yum
 COPY server.py rpc.proto trex_cfg.yaml.tmpl /root/tgen/
-RUN pushd /root/tgen && python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto && rm rpc.proto && popd
+RUN pushd /root/tgen && python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto && rm rpc.proto && popd
 COPY trafficgen_entry.sh /root/
-RUN chmod 777 /root/trafficgen_entry.sh /root/tgen/binary-search.py /root/tgen/trex-query.py /root/tgen/trex-txrx.py
+RUN chmod 777 /root/trafficgen_entry.sh /root/tgen/binary-search.py /root/tgen/trex-query.py /root/tgen/trex-txrx.py \
+       && ln -f -s /bin/python3 /bin/python \
+       && ln -f -s /usr/bin/python3 /usr/bin/python
 
 ENTRYPOINT ["/root/dumb-init", "--"]
 CMD ["/root/trafficgen_entry.sh", "start"]

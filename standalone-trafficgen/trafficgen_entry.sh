@@ -169,7 +169,7 @@ else
 
     pushd /opt/trex/current
     if [[ "${vendor}" == "0x8086" ]]; then
-	if [[ "${device}" == "0x154c" ]]; then
+	if [[ "${device}" == "0x154c" || "${device}" == "0x1889" ]]; then
 	    #vf_extra_opt="--no-promisc --use-device-stats"
 	    vf_extra_opt="--no-promisc"
 	fi
