@@ -1,12 +1,12 @@
 FROM docker.io/fedora:29
+ARG TREX_VER="v2.88"
 USER root
-ENV TREX_VER "v2.88"
 
-RUN yum -y install dpdk dpdk-tools \
+RUN dnf -y --nodocs install dpdk dpdk-tools \
        		pciutils which \
        		gcc python3 python3-devel \
-       		net-tools \
-       		tmux gettext
+       		net-tools util-linux \
+       		tmux gettext rdma-core libibverbs
 RUN python3 -m pip install --no-cache-dir --upgrade pip \
        && python3 -m pip install --no-cache-dir --upgrade wheel \
        && python3 -m pip install --no-cache-dir grpcio \
@@ -26,7 +26,7 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip \
        && rm -f /opt/trex/$TREX_VER/trex_client_$TREX_VER.tar.gz \
        && curl -L -k -o /root/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_x86_64 \
        && chmod +x /root/dumb-init \
-       && yum clean all && rm -rf /var/cache/yum
+       && dnf clean all && rm -rf /var/cache/yum
 COPY server.py rpc.proto trex_cfg.yaml.tmpl /root/tgen/
 RUN pushd /root/tgen && python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto && rm rpc.proto && popd
 COPY trafficgen_entry.sh /root/

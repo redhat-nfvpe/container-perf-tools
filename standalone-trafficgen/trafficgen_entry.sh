@@ -159,7 +159,9 @@ else
     read -a cpuArray <<< $(convert_number_range ${isolated_cpus} | sed -e 's/,/ /g')
     export master_cpu=${cpuArray[0]}
     export latency_cpu=${cpuArray[1]}
-    cpuArray=("${cpuArray[@]:2}")
+    #client_cpu is used to run binary search code
+    client_cpu=${cpuArray[2]}
+    cpuArray=("${cpuArray[@]:3}")
     workerCPUs=${#cpuArray[@]}
     export worker_cpu=$(echo ${cpuArray[@]} | sed -e 's/ /,/g')
     export numa_node=$(cat ${pciDeviceDir}/${NIC1}/numa_node)
@@ -182,14 +184,14 @@ else
     fi
 
     rm -rf /dev/hugepages/${page_prefix}*
-    trex_server_cmd="./t-rex-64 -i -c ${workerCPUs} --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix ${page_prefix} ${trex_extra_opt}"
+    trex_server_cmd="./t-rex-64 -i -c ${workerCPUs} --no-ofed-check --checksum-offload --cfg ${yaml_file} --iom 0 -v 4 --prefix ${page_prefix} ${trex_extra_opt}"
     echo "run trex server cmd: ${trex_server_cmd}"
     echo "trex yaml:"
     echo "-------------------------------------------------------------------"
     cat ${yaml_file}
     echo "-------------------------------------------------------------------"
     rm -fv /tmp/trex.server.out
-    tmux new-session -d -n server -s trex "bash -c '${trex_server_cmd} | tee /tmp/trex.server.out'"
+    taskset -c ${client_cpu} tmux new-session -d -n server -s trex "bash -c '${trex_server_cmd} | taskset -c ${client_cpu} tee /tmp/trex.server.out'"
     popd
 
     count=60
@@ -210,14 +212,14 @@ else
     if [ "$1" == "start" ]; then
         for size in $(echo ${frame_size} | sed -e 's/,/ /g'); do
             if (( l3 == 0)); then
-                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=50 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
+                taskset -c ${client_cpu} ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=50 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
                 --traffic-direction=bidirectional --frame-size=${size} --num-flows=${flows} --rate-tolerance-failure=fail \
                 --rate-unit=% --rate=100 --search-granularity=5.0 --runtime-tolerance=50 --negative-packet-loss=fail ${vf_extra_opt}
             else
-                ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=50 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
+                taskset -c ${client_cpu} ./binary-search.py --traffic-generator=trex-txrx --rate-tolerance=50 --use-src-ip-flows=1 --use-dst-ip-flows=1 --use-src-mac-flows=1 --use-dst-mac-flows=1 \
                 --use-src-port-flows=0 --use-dst-port-flows=0 --use-encap-src-ip-flows=0 --use-encap-dst-ip-flows=0 --use-encap-src-mac-flows=0 --use-encap-dst-mac-flows=0 \
                 --use-protocol-flows=0 --device-pairs=${device_pairs} --active-device-pairs=${device_pairs} --sniff-runtime=${sniff_seconds} \
                 --search-runtime=${search_seconds} --validation-runtime=${validation_seconds} --max-loss-pct=${loss_ratio} \
@@ -226,7 +228,7 @@ else
             fi
         done
     elif [ "$1" == "server" ]; then
-        python server.py --extra-opts \"${vf_extra_opt}\"
+        taskset -c ${client_cpu} python server.py --extra-opts \"${vf_extra_opt}\"
     fi
 fi
 
