@@ -22,31 +22,24 @@ For the all-in-one container, it's expected each tool will be located in its own
 under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with 
 cmd.sh under that directory. The tool script should expect its arguments/options via enviroment variables.
 
-The run.sh under the repo root diretory is the entrance for the container image. Once it is started, it will git pull this 
-repo to get the latest tools. It then executes the specified tool based on the yaml specification, with the environment 
-variables in the yaml file. The yaml examples for k8s can be found under the sample-yamls/ directory
+The run.sh under the repo root directory is the entrance for the container image. Once it is started, it will execute the
+specified tool based on the yaml specification, with the environment variables in the yaml file. The yaml examples for k8s
+(OpenShift) can be found under the sample-yamls/ directory
 
-### Unable to build containers due to missing packages
-A valid subscription manager registration is required to resolve some of the packages used by the containers.
+### Building the container
 
-The yum process running inside the container will run using container mode and pass through the host's registration to allow resolving all the packages.
+**Prerequisite:** A valid subscription manager registration is required to resolve some of the packages used by the containers.
+The yum process running inside the container will run using container mode and pass through the host's registration to allow
+resolving all the packages. If you attempt to build on a host without a valid subscription then some packages will not be able to install and the container build will fail.
 
-If you attempt to build on a host without a valid subscription then some packages will not be able to install and the container build will fail.
-
-### How to run the all-in-one test container 
-
-There are two types of container tool use cases. The first type is to run the performance tool as container 
-image in a Kubernetes cluster and the performance tool will collect and report performance metrics of the 
-underlying system; this type includes sysjitter, cyclictest, and uperf. The second type lives outside Kubernetes 
-cluster and is used externally to evaluate the Kubernetes cluster; this type includes trex trafficgen. Sometimes 
-we need to use these two types together to evaluate the system; for example, to evaluate the SRIOV throughput, we 
-can run a DPDK testpmd container inside Kubernetes cluster, and outside the cluster use trex trafficgen
-container to do binary search in order to evaluate the highest throughput supported by the SRIOV ports.
+Build the all-in-one container image:
+`podman build -t <your repo tag> -f Dockerfile .`
 
 ### common yaml variables for the all-in-one test container
 
 All the test scripts use enviroment variables as input. There are two types of variables, the first type is common 
-to all tools. The second type is tool specific. Both are defined as name/value pairs under the container env spec.
+to all tools when run from the all-in-one test container. The second type is tool specific. Both are defined as
+name/value pairs under the container env spec.
 
 The common env variables include:
 + GIT_URL: this points to your github fork of this repository, or this repository if no fork
@@ -57,145 +50,58 @@ The common env variables include:
 
 The tool specific variables will be mentioned under each tool section.
 
-### test result log
+## Stand-alone test containers
+
+### Directory layout
+
+Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the
+dockerfiles can be found under the root directory, such as Dockerfile-cyclictest and Dockerfile-oslat. Other standalone test
+containers may have their dockerfiles located in the individual sub directories, such as the standalone-testpmd and
+standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
+
+### Building the container
+
+**Prerequisite:** A valid subscription manager registration is required to resolve some of the packages used by the containers.
+The yum process running inside the container will run using container mode and pass through the host's registration to allow
+resolving all the packages. If you attempt to build on a host without a valid subscription then some packages will not be able to install and the container build will fail.
+
+For example, to build the oslat container image:
+`podman build -t <your repo tag> -f Dockerfile-oslat .`
+
+## Running the tests
+
+### General notes
+
+There are two types of container tool use cases. The first type is to run the performance tool as container
+image in a Kubernetes cluster and the performance tool will collect and report performance metrics of the
+underlying system; this type includes sysjitter, cyclictest, and uperf. The second type lives outside Kubernetes
+cluster and is used externally to evaluate the Kubernetes cluster; this type includes trex trafficgen. Sometimes
+we need to use these two types together to evaluate the system; for example, to evaluate the SRIOV throughput, we
+can run a DPDK testpmd container inside Kubernetes cluster, and outside the cluster use trex trafficgen
+container to do binary search in order to evaluate the highest throughput supported by the SRIOV ports.
+
+### Running as pods
+
+The tests can all be run in pods on an OpenShift kubernetes cluster (this is the recommended method). Sample yaml
+files for each test can be found under the sample-yamls directory. Some examples:
+* oslat: [pod_oslat.yaml](sample-yamls/pod_oslat.yaml)
+* cyclictest: [pod_cyclictest.yaml](sample-yamls/pod_cyclictest.yaml)
+* hwlatdetect: [pod_hwlatdetect.yaml](sample-yamls/pod_hwlatdetect.yaml)
+
+By default, these yaml files point to the pre-built stand-alone container images under the [container-perf-tools](https://quay.io/organization/container-perf-tools) organization on quay.io.
 
 When the test is complete, to get the test result, use "oc logs" or "kubectl logs" command to examine the 
 container log. Currently there is a work in progress to kick off the test and present the test result via 
 rest API.
 
-### uperf test 
+### Running from podman
 
-uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means 
-the worker needs to be started first. The ip address of the slave will be entered as input value for env
-variable "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the 
-"uperfSlave" value and this is to make the automation easier, for example the worker and master can be started like this,
+Alternatively, some of the tests can be run from podman directly. Here is an example of running oslat with podman:
+
 ```
-#!/usr/bin/bash
-if ! oc get pod uperf-slave 1>&2 2>/dev/null; then
-	oc create -f pod-uperf-slave.yaml
-fi
-oc delete pod uperf-master 2>/dev/null
+# podman run -it --rm --privileged -v /dev/cpu_dma_latency:/dev/cpu_dma_latency --cpuset-cpus 4-11 -e PRIO=1 -e RUNTIME_SECONDS=10 quay.io/jianzzha/oslat
 
-while true; do
-	status=$(oc get pods uperf-slave -o json | jq -r '.status.phase')
-	if [[ "${status}" == "Running" ]]; then
-		break
-	fi
-	sleep 5s
-done
-export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
-envsubst < pod-uperf-master.yaml | oc create -f -
-```
-uperf supports the following environment variables:
-+ tool: uperf, run this uperf tool
-+ uperfSlave: the ip address of the worker pod
-+ size: the tcp write buffer size
-+ threads: number of threads 
-
-### cyclictest test
-
-cyclictest is used to evaluate the real time kernel scheduler latency. 
-
-cyclictest supports the following environment variables:
-+ tool: cyclictest, run this cyclictest tool
-+ DURATION: how long the cyclictest will be run, default: 24 hours
-+ DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs cyclictest will have workload balance disable
-+ INTERVAL: set cyclictest -i parameter, default 1000
-+ stress: choice of false/stress-ng
-+ rt_priority: which rt priority is used to run the cyclictest; default 1
-+ delay: specify how many seconds to delay before test start; default 0
-+ TRACE_THRESHOLD: stop the cyclictest when threshold triggered (in usec); no default
-
-### stress-ng test
-
-stress-ng is used to load and stress cpus
-
-stress-ng supports the following environment variables:
-+ tool: stress-ng, run this stress-ng tool
-+ DURATION: how long the stress-ng will be run, default: 24 hours
-+ CPU_METHOD: specify a cpu stress method, default: matrixprod
-+ CPU_LOAD: load each CPU with P percent loading, default: 100
-+ EXTRA_ARGS: passed directly to stress-ng command
-
-### sysjitter test
-
-sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
-throughput for high speed network.
-
-sysjitter supports the following environment variables:
-+ tool: sysjitter, run this sysjitter tool
-+ RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
-+ THRESHOLD_NS: default 200 ns
-+ DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs sysjitter will have workload balance disabled
-+ USE_TASKSET: choice of y/n; if enabled, use taskset to pin the task cpu
-+ manual: choice of y/n; if enabled, don't kick off sysjitter, this is for debug purpose
-
-### testpmd test
-
-testpmd is used to evaluate the system networking performance. The container expects two data ports (other than 
-the default interface) and wires the two ports together via dpdk handling. For higher performance, the testpmd 
-runs in io mode and it doesn't examine the packets and simply forwards packets from one port to another port,
-in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end 
-throughput test.
-
-testpmd supports the following environment variables:
-+ tool: testpmd, run this testpmd tool
-+ ring_size: ring buffer size, default 2048
-+ manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
-
-### trafficgen test
-
-trafficgen is used to perform a binary search and find the maximum sustainable throughput. This tool expects 
-two data ports (other than the default interface) and sends the traffic out of one port and expects the traffic 
-received on the other port and vice versa. It begins at line rate and automatically adjust the traffic rate 
-for next iteration based on the packet loss ratio at last iteration until it finds a traffic rate this has 
-packet loss ratio meets the expectation.
-
-This tool supports the following environment variables:
-+ tool: trafficgen, run this trafficgen tool
-+ pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
-+ validation_seconds: The final validation test duration, default 30 seconds
-+ search_seconds: The test duration for each search iteration, default 10 seconds
-+ sniff_seconds: The initial test duration before binary search begins, default 10 seconds
-+ loss_ratio: Expected packet loss ration percentile, default 0.002
-+ flows: Number of flows, default 1
-+ frame_size: The packet frame size (layer 2 frame), default 64 bytes
-
-Prerequisites:
-+ 2MB or 1GB huge pages
-+ Isolated CPU for better performance
-+ Example kargs: `default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt isolcpus=4-11`
-
-Podman run example:
-`podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e tool=trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  -e validation_seconds=10 quay.io/jianzzha/perf-tools`
-
-## Standalone test tool containers
-
-Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the 
-dockerfiles can be found under the root directory, suck as Dockerfile-cyclictest and Dockerfile-oslat. Other standalone test 
-containers may have their dockerfiles located in the individual sub directories, such as the standalone-testpmd and 
-standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
-
-### How to run the standalone oslat test
-
-Build the oslat container image:
-`podman build -t <your repo tag> -f Dockerfile-oslat .`
-
-A pre-built oslat container image is located at: quay.io/jianzzha/oslat
-
-oslat supports the following environment variables:
-+ RUNTIME_SECONDS: test duration in seconds; default 10
-+ PRIO: RT priority used for the test threads; default 1
-+ DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
-+ manual: choice of y/n; if enabled, don't kick off oslat, this is for debug purpose
-+ delay: specify how many second to delay before test start; default 0
-+ TRACE_THRESHOLD: stop the oslat test when threshold triggered (in usec); no default
-
-A sample pod_oslat.yaml can be found under the sample-yamls directory.
-
-Below is an example of running it using podman,
-```
-# podman run -it --rm --privileged -v /dev/cpu_dma_latency:/dev/cpu_dma_latency --cpuset-cpus 4-11 -e PRIO=1 -e RUNTIME_SECONDS=10 quay.io/jianzzha/oslat############# dumping env ###########
+############# dumping env ###########
 HOSTNAME=25d916f6b7ab
 container=podman
 PWD=/root
@@ -207,7 +113,7 @@ SHLVL=1
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 _=/usr/bin/env
 #####################################
- 
+
 ########## container info ###########
 /proc/cmdline:
 BOOT_IMAGE=(hd0,msdos1)/vmlinuz-4.18.0-240.22.1.rt7.77.el8_3.x86_64 root=/dev/mapper/rhel_dhcp16--231--152-root ro crashkernel=auto resume=/dev/mapper/rhel_dhcp16--231--152-swap rd.lvm.lv=rhel_dhcp16-231-152/root rd.lvm.lv=rhel_dhcp16-231-152/swap default_hugepagesz=1G hugepagesz=1G hugepages=16
@@ -272,76 +178,176 @@ Test completed.
 
 ```
 
-### How to run hwlatdetect using oslat image
+## Test Configuration
 
-The hwlatdetect can be tested using the pre-build oslat image located at: quay.io/jianzzha/oslat
+### uperf test 
 
-The following environment variables are used for hwlatdetect:
-+ run_hwlatdetect: enable the hwlatdetect test
-+ RUNTIME_SECONDS: test duration in seconds
-
-A sample pod_hwlatdetect.yaml can be found under the sample-yamls directory.
-
-Below is an example of running it using podman,
+uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means 
+the worker needs to be started first. The ip address of the slave will be entered as input value for env
+variable "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the 
+"uperfSlave" value and this is to make the automation easier, for example the worker and master can be started like this,
 ```
-# podman run -it --rm --privileged -v /sys/kernel/debug:/sys/kernel/debug -v /dev/cpu_dma_latency:/dev/cpu_dma_latency --cpuset-cpus 4-11 -e run_hwlatdetect=y -e RUNTIME_SECONDS=10 quay.io/jianzzha/oslat
-Trying to pull quay.io/jianzzha/oslat:latest...
-Getting image source signatures
-Copying blob 8fa15fe25aee done  
-Copying blob 45ac2b80236e done  
-Copying blob 1203ed629be0 done  
-Copying blob 3c72a8ed6814 done  
-Copying config 20558905fc done  
-Writing manifest to image destination
-Storing signatures
-hwlatdetect:  test duration 10 seconds
-   detector: tracer
-   parameters:
-        Latency threshold: 10us
-        Sample window:     1000000us
-        Sample width:      500000us
-     Non-sampling period:  500000us
-        Output File:       None
+#!/usr/bin/bash
+if ! oc get pod uperf-slave 1>&2 2>/dev/null; then
+	oc create -f pod-uperf-slave.yaml
+fi
+oc delete pod uperf-master 2>/dev/null
 
-Starting test
-test finished
-Max Latency: Below threshold
-Samples recorded: 0
-Samples exceeding threshold: 0
+while true; do
+	status=$(oc get pods uperf-slave -o json | jq -r '.status.phase')
+	if [[ "${status}" == "Running" ]]; then
+		break
+	fi
+	sleep 5s
+done
+export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
+envsubst < pod-uperf-master.yaml | oc create -f -
 ```
+uperf supports the following environment variables:
++ tool: uperf, run this uperf tool
++ uperfSlave: the ip address of the worker pod
++ size: the tcp write buffer size
++ threads: number of threads 
 
-### How to run the standalone cyclictest
+### oslat test
 
-Build the cyclictest container image:
-`podman build -t <your repo tag> -f Dockerfile-cyclictest .`
+oslat is a userspace polling mode stress program to detect OS level latency.
+
+oslat supports the following environment variables:
++ RUNTIME_SECONDS: test duration in seconds; default 10
++ PRIO: RT priority used for the test threads; default 1
++ manual: choice of y/n; if enabled, don't kick off oslat, this is for debug purpose
++ delay: specify how many second to delay before test start; default 0
++ TRACE_THRESHOLD: stop the oslat test when threshold triggered (in usec); no default
++ EXTRA_ARGS (default "", will be passed directly to oslat command)
+
+### cyclictest test
+
+cyclictest is used to evaluate the real time kernel scheduler latency. 
 
 cyclictest supports the following environment variables:
-+ DURATION: test duration, default 24h
-+ DISABLE_CPU_BALANCE: set to 'y' to disable cpu balancing; default to 'n'
++ tool: cyclictest, run this cyclictest tool
++ DURATION: how long the cyclictest will be run, default: 24 hours
 + INTERVAL: set cyclictest -i parameter, default 1000
-+ stress: choice of false/stress-ng, default false
-+ rt_priority: set cyclictest thread priority, default 1
++ stress: choice of false/stress-ng
++ rt_priority: which rt priority is used to run the cyclictest; default 1
++ delay: specify how many seconds to delay before test start; default 0
 + TRACE_THRESHOLD: stop the cyclictest when threshold triggered (in usec); no default
++ EXTRA_ARGS (default "", will be passed directly to cyclictest command)
 
-A sample pod_cyclictest.yaml can be found under the sample-yamls directory.
+### stress-ng test
 
-### How to run the standalone stress-ng
-
-Build the stress-ng container image:
-`podman build -t <your repo tag> -f Dockerfile-stress-ng .`
+stress-ng is used to load and stress cpus
 
 stress-ng supports the following environment variables:
++ tool: stress-ng, run this stress-ng tool
 + DURATION: how long the stress-ng will be run, default: 24 hours
 + CPU_METHOD: specify a cpu stress method, default: matrixprod
 + CPU_LOAD: load each CPU with P percent loading, default: 100
-+ EXTRA_ARGS: passed directly to stress-ng command
++ EXTRA_ARGS (default "", will be passed directly to stress-ng command)
 
-A sample pod_stress_ng.yaml can be found under the sample-yamls directory.
+### sysjitter test
 
-### How to run the standalone testpmd
+sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
+throughput for high speed network.
 
-Refer to the [standalone-testpmd directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-testpmd)
+sysjitter supports the following environment variables:
++ tool: sysjitter, run this sysjitter tool
++ RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
++ THRESHOLD_NS: default 200 ns
++ DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs sysjitter will have workload balance disabled
++ USE_TASKSET: choice of y/n; if enabled, use taskset to pin the task cpu
++ manual: choice of y/n; if enabled, don't kick off sysjitter, this is for debug purpose
 
-### How to run the standalone trafficgen
+### testpmd test
 
-Refer to the [standalone-trafficgen directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-trafficgen)
+testpmd is used to evaluate the system networking performance. The container expects two data ports (other than 
+the default interface) and wires the two ports together via dpdk handling. For higher performance, the testpmd 
+runs in io mode and it doesn't examine the packets and simply forwards packets from one port to another port,
+in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end 
+throughput test.
+
+testpmd supports the following environment variables:
++ tool: testpmd, run this testpmd tool
++ ring_size: ring buffer size, default 2048
++ manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
+
+For more information, refer to the [standalone-testpmd directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-testpmd)
+
+### trafficgen test
+
+trafficgen is used to perform a binary search and find the maximum sustainable throughput. This tool expects 
+two data ports (other than the default interface) and sends the traffic out of one port and expects the traffic 
+received on the other port and vice versa. It begins at line rate and automatically adjust the traffic rate 
+for next iteration based on the packet loss ratio at last iteration until it finds a traffic rate this has 
+packet loss ratio meets the expectation.
+
+This tool supports the following environment variables:
++ tool: trafficgen, run this trafficgen tool
++ pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
++ validation_seconds: The final validation test duration, default 30 seconds
++ search_seconds: The test duration for each search iteration, default 10 seconds
++ sniff_seconds: The initial test duration before binary search begins, default 10 seconds
++ loss_ratio: Expected packet loss ration percentile, default 0.002
++ flows: Number of flows, default 1
++ frame_size: The packet frame size (layer 2 frame), default 64 bytes
+
+Prerequisites:
++ 2MB or 1GB huge pages
++ Isolated CPU for better performance
++ Example kargs: `default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt isolcpus=4-11`
+
+Podman run example:
+`podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e tool=trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  -e validation_seconds=10 quay.io/jianzzha/perf-tools`
+
+For more information, refer to the [standalone-trafficgen directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-trafficgen)
+
+### hwlatdetect test
+
+hwlatdetect is used to detect large system latencies induced by the hardware or firmware.
+
+hwlatdetect supports the following environment variables:
++ tool: hwlatdetect, run the hwlatdetect tool
++ RUNTIME_SECONDS: how long the test will be run, default: 10 seconds
++ delay: specify how many seconds to delay before test start; default 0
++ THRESHOLD: only record hardware latencies above THRESHOLD (in usec); no default
++ EXTRA_ARGS (default "", will be passed directly to hwlatdetect command)
+
+### timerlat test
+
+timerlat is used to find sources of wakeup latencies of real-time threads. It is run with the rtla tool that analyzes the
+cause of any unexpected latencies.
+
+timerlat supports the following environment variables:
++ tool: rtla
++ COMMMAND: timerlat
++ DURATION: how long the test will be run, default: 24 hours
++ DELAY: specify how many seconds to delay before test start; default 0
++ MAX_LATENCY: stop trace if the thread latency is higher than MAX_LATENCY (in usec); default 20
++ EXTRA_ARGS (default "", will be passed directly to timerlat command)
+
+### osnoise test
+
+osnoise is used to find sources of operating system noise. It is run with the rtla tool that analyzes the
+cause of any unexpected latencies.
+
+osnoise supports the following environment variables:
++ tool: rtla
++ COMMMAND: osnoise
++ DURATION: how long the test will be run, default: 24 hours
++ DELAY: specify how many seconds to delay before test start; default 0
++ MAX_LATENCY: stop trace if the sample is higher than MAX_LATENCY (in usec); default 20
++ EXTRA_ARGS (default "", will be passed directly to osnoise command)
+
+### hwnoise test
+
+hwnoise is used to find sources of operating system noise with interrupts disabled. It is run with the rtla
+tool that analyzes the cause of any unexpected latencies.
+
+hwnoise supports the following environment variables:
++ tool: rtla
++ COMMMAND: hwnoise
++ DURATION: how long the test will be run, default: 24 hours
++ DELAY: specify how many seconds to delay before test start; default 0
++ MAX_LATENCY: stop trace if the sample is higher than MAX_LATENCY (in usec); default 20
++ EXTRA_ARGS (default "", will be passed directly to hwnoise command)

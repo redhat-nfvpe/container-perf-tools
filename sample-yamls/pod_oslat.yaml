@@ -7,49 +7,43 @@ metadata:
     irq-load-balancing.crio.io: "disable"
     cpu-quota.crio.io: "disable"
 spec:
-  runtimeClassName: performance-cnv-sriov-profile
+  # Map to the correct performance class in the cluster (from PAO)
+  # Identify class names with "oc get runtimeclass"
+  runtimeClassName: performance-openshift-node-performance-profile
   restartPolicy: Never
   containers:
   - name: oslat 
-    image: quay.io/jianzzha/oslat 
+    image: quay.io/organization/container-perf-tools/oslat
     imagePullPolicy: Always 
+    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     resources:
+      requests:
+        memory: "200Mi"
+        cpu: "4"
       limits:
         memory: "200Mi"
         cpu: "4"
     env:
+    - name: GIT_URL
+      value: "false"
+    - name: tool
+      value: "oslat"
     - name: PRIO 
       value: "1"
     - name: delay
       value: "0"
     - name: RUNTIME_SECONDS 
       value: "30"
-    - name: DISABLE_CPU_BALANCE
-      value: "n"
-      # DISABLE_CPU_BALANCE requires privileged=true
     - name: TRACE_THRESHOLD
       value: ""
-      # TRACE_THRESHOLD requires privileged=true and debug volume
+    - name: EXTRA_ARGS
+      value: ""
     securityContext:
+      # TRACE_THRESHOLD requires privileged=true
       #privileged: true
       capabilities:
-        fsGroup: 0
         add:
           - SYS_NICE
           - IPC_LOCK
-          - SYS_RAWIO
-          - SYS_ADMIN
-    volumeMounts:
-    - mountPath: /dev/cpu_dma_latency
-      name: cstate
-    #- mountPath: /sys/kernel/debug
-    #  name: debug
-  volumes:
-  - name: cstate
-    hostPath:
-      path: /dev/cpu_dma_latency
-  #- name: debug
-  #  hostPath:
-  #    path: /sys/kernel/debug
   nodeSelector:
-    node-role.kubernetes.io/worker-cnf: ""
+    node-role.kubernetes.io/worker: ""

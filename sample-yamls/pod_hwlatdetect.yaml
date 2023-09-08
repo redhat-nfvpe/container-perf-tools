@@ -6,27 +6,22 @@ spec:
   restartPolicy: Never
   containers:
   - name: hwlatdetect 
-    image: quay.io/jianzzha/oslat 
+    image: quay.io/organization/container-perf-tools/hwlatdetect
     imagePullPolicy: Always 
+    # Request and Limits are not required - hwlat detector is done in the kernel
     env:
+    - name: GIT_URL
+      value: "false"
+    - name: tool
+      value: "hwlatdetect"
     - name: RUNTIME_SECONDS 
       value: "30"
-    - name: run_hwlatdetect
-      value: "y"
+    - name: THRESHOLD
+      value: "10"
+    - name: EXTRA_ARGS
+      value: ""
     securityContext:
+      # Required for access to /dev/cpu_dma_latency and /sys/kernel/debug on the host
       privileged: true
-    volumeMounts:
-    - mountPath: /dev/cpu_dma_latency
-      name: cstate
-    - mountPath: /sys/kernel/debug
-      name: debug
-  volumes:
-  - name: cstate
-    hostPath:
-      path: /dev/cpu_dma_latency
-  - name: debug
-    hostPath:
-      path: /sys/kernel/debug
   nodeSelector:
-    node-role.kubernetes.io/worker-cnf: ""
-  
+    node-role.kubernetes.io/worker: ""

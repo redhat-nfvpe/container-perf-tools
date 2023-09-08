@@ -9,12 +9,12 @@ metadata:
 spec:
   # Map to the correct performance class in the cluster (from PAO)
   # Identify class names with "oc get runtimeclass"
-  runtimeClassName: performance-custom-class
+  runtimeClassName: performance-openshift-node-performance-profile
   restartPolicy: Never 
   containers:
-  - name: container-perf-tools 
-    image: quay.io/jianzzha/perf-tools
-    imagePullPolicy: IfNotPresent
+  - name: cyclictest
+    image: quay.io/organization/container-perf-tools/cyclictest
+    imagePullPolicy: Always
     # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     resources:
       requests:
@@ -24,6 +24,8 @@ spec:
         memory: "200Mi"
         cpu: "4"
     env:
+    - name: GIT_URL
+      value: "false"
     - name: tool
       value: "cyclictest"
     - name: DURATION
@@ -37,30 +39,10 @@ spec:
       value: "0"
     - name: TRACE_THRESHOLD
       value: ""
-      # TRACE_THRESHOLD requires privileged=true and debug volume
-    # # Following setting not required in OCP4.6+
-    # - name: DISABLE_CPU_BALANCE
-    #   value: "y"
-    #   # DISABLE_CPU_BALANCE requires privileged=true
+    - name: EXTRA_ARGS
+      value: ""
     securityContext:
+      # Required for access to /dev/cpu_dma_latency and /sys/kernel/debug on the host
       privileged: true
-      #capabilities:
-      #  add:
-      #    - SYS_NICE
-      #    - IPC_LOCK
-      #    - SYS_RAWIO
-    volumeMounts:
-    - mountPath: /dev/cpu_dma_latency
-      name: cstate
-      #- mountPath: /sys/kernel/debug
-      #  name: debug
-  volumes:
-  - name: cstate
-    hostPath:
-      path: /dev/cpu_dma_latency
-  #- name: debug
-  #  hostPath:
-  #    path: /sys/kernel/debug
   nodeSelector:
-    node-role.kubernetes.io/worker-rt: ""
-  
+    node-role.kubernetes.io/worker: ""

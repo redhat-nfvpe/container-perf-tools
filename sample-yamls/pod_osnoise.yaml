@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: stress-ng
+  name: osnoise
   annotations:
     cpu-load-balancing.crio.io: "disable"
     irq-load-balancing.crio.io: "disable"
@@ -12,29 +12,33 @@ spec:
   runtimeClassName: performance-openshift-node-performance-profile
   restartPolicy: Never
   containers:
-  - name: stress-ng
-    image: quay.io/organization/container-perf-tools/stress-ng
+  - name: rtla
+    image: quay.io/organization/container-perf-tools/rtla
     imagePullPolicy: Always
-    # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     resources:
       requests:
         memory: "200Mi"
-        cpu: "4"
+        cpu: "16"
       limits:
         memory: "200Mi"
-        cpu: "4"
+        cpu: "16"
     env:
     - name: GIT_URL
       value: "false"
     - name: tool
-      value: "stress-ng"
+      value: "rtla"
+    - name: COMMAND
+      value: "osnoise"
+    - name: DELAY
+      value: "30"
     - name: DURATION
-      value: "1h"
-    - name: CPU_METHOD
-      value: "matrixprod"
-    - name: CPU_LOAD
-      value: "100"
+      value: "24h"
+    - name: MAX_LATENCY
+      value: "20"
     - name: EXTRA_ARGS
       value: ""
+    securityContext:
+      # Required for access to /sys/kernel/debug on the host
+      privileged: true
   nodeSelector:
     node-role.kubernetes.io/worker: ""
