@@ -4,7 +4,7 @@
 #   DURATION (default "24h")
 #   CPU_METHOD (default "matrixprod")
 #   CPU_LOAD (default "100")
-#   EXTRA_ARGS (will be passed directly to stress-ng command)
+#   EXTRA_ARGS (default "", will be passed directly to stress-ng command)
 
 source common-libs/functions.sh
 
