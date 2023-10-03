@@ -13,7 +13,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: rtla
-    image: quay.io/organization/container-perf-tools/rtla
+    image: quay.io/container-perf-tools/rtla
     imagePullPolicy: Always
     resources:
       requests:

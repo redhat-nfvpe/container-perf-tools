@@ -13,7 +13,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: stress-ng
-    image: quay.io/organization/container-perf-tools/stress-ng
+    image: quay.io/container-perf-tools/stress-ng
     imagePullPolicy: Always
     # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     resources:
