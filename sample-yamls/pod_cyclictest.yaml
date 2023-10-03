@@ -13,7 +13,7 @@ spec:
   restartPolicy: Never 
   containers:
   - name: cyclictest
-    image: quay.io/organization/container-perf-tools/cyclictest
+    image: quay.io/container-perf-tools/cyclictest
     imagePullPolicy: Always
     # Request and Limits must be identical for the Pod to be assigned to the QoS Guarantee
     resources:

@@ -6,7 +6,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: hwlatdetect 
-    image: quay.io/organization/container-perf-tools/hwlatdetect
+    image: quay.io/container-perf-tools/hwlatdetect
     imagePullPolicy: Always 
     # Request and Limits are not required - hwlat detector is done in the kernel
     env:
