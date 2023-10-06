@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# env vars: GIT_URL (default https://github.com/redhat-nfvpe/container-perf-tools.git)
-#           tool (choices: sysjitter/testpmd/cyclictest/stress-ng)
+# env vars: tool (choices: sysjitter/testpmd/cyclictest/stress-ng)
 
 function sigfunc() {
 	exit 0
@@ -11,14 +10,6 @@ trap sigfunc TERM INT SIGUSR1
 echo "######################################"
 env
 echo "######################################"
-
-[ -n "${GIT_URL}" ] || GIT_URL="https://github.com/redhat-nfvpe/container-perf-tools.git"
-
-# Support for air-gapped use with built-in container-tools
-if [[ ! "${GIT_URL}" == "false" ]]; then
-        echo "git clone ${GIT_URL}"
-        git clone ${GIT_URL} /root/container-tools
-fi
 
 cd /root/container-tools
 

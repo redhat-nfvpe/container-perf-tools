@@ -42,10 +42,6 @@ to all tools when run from the all-in-one test container. The second type is too
 name/value pairs under the container env spec.
 
 The common env variables include:
-+ GIT_URL: this points to your github fork of this repository, or this repository if no fork
-  + if the GIT_URL is not set, this repository will be used
-  + if the GIT_URL is set to "false", the tools in the image will be used (air gapped mode)
-
 + tool: which performance test to run, essentially it is one of the tool directory names
 
 The tool specific variables will be mentioned under each tool section.

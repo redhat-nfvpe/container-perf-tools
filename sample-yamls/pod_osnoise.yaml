@@ -23,8 +23,6 @@ spec:
         memory: "200Mi"
         cpu: "16"
     env:
-    - name: GIT_URL
-      value: "false"
     - name: tool
       value: "rtla"
     - name: COMMAND
