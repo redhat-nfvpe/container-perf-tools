@@ -24,8 +24,6 @@ spec:
         memory: "200Mi"
         cpu: "4"
     env:
-    - name: GIT_URL
-      value: "false"
     - name: tool
       value: "stress-ng"
     - name: DURATION

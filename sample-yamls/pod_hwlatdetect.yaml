@@ -10,8 +10,6 @@ spec:
     imagePullPolicy: Always 
     # Request and Limits are not required - hwlat detector is done in the kernel
     env:
-    - name: GIT_URL
-      value: "false"
     - name: tool
       value: "hwlatdetect"
     - name: RUNTIME_SECONDS 

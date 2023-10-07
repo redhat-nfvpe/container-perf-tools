@@ -11,8 +11,6 @@ spec:
     ports:
     - containerPort: 20000
     env:
-    - name: GIT_URL
-      value: https://github.com/jianzzha/container-tools.git
     - name: tool
       value: uperf
     - name: mode 

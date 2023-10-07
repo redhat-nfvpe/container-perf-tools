@@ -14,8 +14,6 @@ spec:
     image: quay.io/jianzzha/perf-tools
     imagePullPolicy: IfNotPresent
     env:
-    - name: GIT_URL
-      value: https://github.com/jianzzha/container-tools.git
     - name: tool
       value: "sysjitter"
     - name: RUNTIME_SECONDS 
