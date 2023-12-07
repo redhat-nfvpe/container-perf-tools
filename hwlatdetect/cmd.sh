@@ -23,7 +23,7 @@ echo "#####################################"
 
 uname=`uname -nr`
 echo "$uname"
-rpm -q rt-tests
+rpm -q realtime-tests
 
 for cmd in hwlatdetect; do
     command -v $cmd >/dev/null 2>&1 || { echo >&2 "$cmd required but not installed.  Aborting"; exit 1; }

@@ -28,10 +28,6 @@ specified tool based on the yaml specification, with the environment variables i
 
 ### Building the container
 
-**Prerequisite:** A valid subscription manager registration is required to resolve some of the packages used by the containers.
-The yum process running inside the container will run using container mode and pass through the host's registration to allow
-resolving all the packages. If you attempt to build on a host without a valid subscription then some packages will not be able to install and the container build will fail.
-
 Build the all-in-one container image:
 `podman build -t <your repo tag> -f Dockerfile .`
 
@@ -56,10 +52,6 @@ containers may have their dockerfiles located in the individual sub directories,
 standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
 
 ### Building the container
-
-**Prerequisite:** A valid subscription manager registration is required to resolve some of the packages used by the containers.
-The yum process running inside the container will run using container mode and pass through the host's registration to allow
-resolving all the packages. If you attempt to build on a host without a valid subscription then some packages will not be able to install and the container build will fail.
 
 For example, to build the oslat container image:
 `podman build -t <your repo tag> -f Dockerfile-oslat .`
