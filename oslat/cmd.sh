@@ -27,7 +27,7 @@ PRIO=${PRIO:-1}
 
 uname=`uname -nr`
 echo "$uname"
-rpm -q rt-tests
+rpm -q realtime-tests
 
 cpulist=`get_allowed_cpuset`
 echo "allowed cpu list: ${cpulist}"

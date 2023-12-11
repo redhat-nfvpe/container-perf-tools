@@ -37,4 +37,4 @@ fi
 echo "Pausing for 10s before executing $tool to allow CPU Manager to reconcile cgroups"
 sleep 10
 
-exec /root/dumb-init -- /root/container-tools/$tool/cmd.sh
+exec /usr/bin/dumb-init -- /root/container-tools/$tool/cmd.sh
