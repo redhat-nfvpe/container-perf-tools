@@ -311,7 +311,13 @@ timerlat supports the following environment variables:
 + COMMMAND: timerlat
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
-+ MAX_LATENCY: stop trace if the thread latency is higher than MAX_LATENCY (in usec); default 20
++ MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
++ AA_THRESHOLD: sets automatic trace mode stopping the session if latency in us is hit and generates a trace. A value of 0 disables this feature; default 20
++ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list. 
++ EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
++ CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
++ CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
++ PAUSE: pauses after run. choices y/n; default: y
 + EXTRA_ARGS (default "", will be passed directly to timerlat command)
 
 ### osnoise test
@@ -324,7 +330,13 @@ osnoise supports the following environment variables:
 + COMMMAND: osnoise
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
-+ MAX_LATENCY: stop trace if the sample is higher than MAX_LATENCY (in usec); default 20
++ MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
++ AA_THRESHOLD: sets automatic trace mode stopping the session if latency in us is hit and generates a trace. A value of 0 disables this feature; default 20
++ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list. 
++ EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
++ CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
++ CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
++ PAUSE: pauses after run. choices y/n; default: y
 + EXTRA_ARGS (default "", will be passed directly to osnoise command)
 
 ### hwnoise test
@@ -337,5 +349,11 @@ hwnoise supports the following environment variables:
 + COMMMAND: hwnoise
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
-+ MAX_LATENCY: stop trace if the sample is higher than MAX_LATENCY (in usec); default 20
++ MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
++ AA_THRESHOLD: sets automatic trace mode stopping the session if latency in us is hit and generates a trace. A value of 0 disables this feature; default 20
++ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list. 
++ EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
++ CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
++ CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
++ PAUSE: pauses after run. choices y/n; default: y
 + EXTRA_ARGS (default "", will be passed directly to hwnoise command)
