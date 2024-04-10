@@ -5,6 +5,7 @@
 #   CPU_METHOD (default "matrixprod")
 #   CPU_LOAD (default "100")
 #   EXTRA_ARGS (default "", will be passed directly to stress-ng command)
+#   CMDLINE (default "", the full set of options passed to stress-ng command, overrides all other options)
 
 source common-libs/functions.sh
 
@@ -45,28 +46,34 @@ echo "allowed cpu list: ${cpulist}"
 uname=`uname -nr`
 echo "$uname"
 
-cpulist=`convert_number_range ${cpulist} | tr , '\n' | sort -n | uniq`
+if [ "${CMDLINE}" == "" ]; then
 
-declare -a cpus
-cpus=(${cpulist})
+    cpulist=`convert_number_range ${cpulist} | tr , '\n' | sort -n | uniq`
 
-trap sigfunc TERM INT SIGUSR1
+    declare -a cpus
+    cpus=(${cpulist})
 
-newcpulist=${cpus[0]}
-cindex=1
-ccount=1
-while (( $cindex < ${#cpus[@]} )); do
-    newcpulist="${newcpulist},${cpus[$cindex]}"
-    cindex=$(($cindex + 1))
-    ccount=$(($ccount + 1))
-done
+    trap sigfunc TERM INT SIGUSR1
 
-echo "cpu list: ${newcpulist}"
+    newcpulist=${cpus[0]}
+    cindex=1
+    ccount=1
+    while (( $cindex < ${#cpus[@]} )); do
+        newcpulist="${newcpulist},${cpus[$cindex]}"
+        cindex=$(($cindex + 1))
+        ccount=$(($ccount + 1))
+    done
 
-command="stress-ng -t ${DURATION} --cpu ${ccount} --taskset ${newcpulist} --cpu-method ${CPU_METHOD} --cpu-load ${CPU_LOAD} --metrics-brief ${EXTRA_ARGS}"
+    echo "cpu list: ${newcpulist}"
+
+    command="stress-ng -t ${DURATION} --cpu ${ccount} --taskset ${newcpulist} --cpu-method ${CPU_METHOD} --cpu-load ${CPU_LOAD} --metrics-brief ${EXTRA_ARGS}"
+else
+    command="stress-ng ${CMDLINE}"
+fi
 
 echo "running cmd: ${command}"
 if [ "${manual:-n}" == "n" ]; then
+    trap sigfunc TERM INT SIGUSR1
     $command
 else
     sleep infinity
