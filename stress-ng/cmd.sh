@@ -46,14 +46,12 @@ echo "allowed cpu list: ${cpulist}"
 uname=`uname -nr`
 echo "$uname"
 
-if [ "${CMDLINE}" == "" ]; then
+if [[ -z "${CMDLINE}" ]]; then
 
     cpulist=`convert_number_range ${cpulist} | tr , '\n' | sort -n | uniq`
 
     declare -a cpus
     cpus=(${cpulist})
-
-    trap sigfunc TERM INT SIGUSR1
 
     newcpulist=${cpus[0]}
     cindex=1
@@ -71,9 +69,11 @@ else
     command="stress-ng ${CMDLINE}"
 fi
 
+trap sigfunc TERM INT SIGUSR1
+
 echo "running cmd: ${command}"
+
 if [ "${manual:-n}" == "n" ]; then
-    trap sigfunc TERM INT SIGUSR1
     $command
 else
     sleep infinity
