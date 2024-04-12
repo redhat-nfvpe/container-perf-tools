@@ -233,6 +233,8 @@ stress-ng supports the following environment variables:
 + CPU_METHOD: specify a cpu stress method, default: matrixprod
 + CPU_LOAD: load each CPU with P percent loading, default: 100
 + EXTRA_ARGS (default "", will be passed directly to stress-ng command)
++ CMDLINE (default "", the full set of options passed to stress-ng command, overrides all other options)
+
 
 ### sysjitter test
 
