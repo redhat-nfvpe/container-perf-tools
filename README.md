@@ -53,8 +53,7 @@ standalone-trafficgen containers. To build those containers one needs to go to t
 
 ### Building the container
 
-For example, to build the oslat container image:
-`podman build -t <your repo tag> -f Dockerfile-oslat .`
+There is a Makefile available to build the stand-alone test containers. Run `make help` for instructions.
 
 ## Running the tests
 

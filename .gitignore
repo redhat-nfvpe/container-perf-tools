@@ -37,3 +37,5 @@ bin/
 #relative/path/to/dir/anotherfile
 */__pycache__/
 
+# VS Code files and directories
+.vscode/
