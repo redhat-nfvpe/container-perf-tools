@@ -8,7 +8,7 @@ BASE_VERSION ?= latest
 VERSION := $(BASE_VERSION)-$(ARCH)
 
 # All container images (default to all)
-IMAGES ?= cyclictest hwlatdetect oslat rtla stress-ng
+IMAGES ?= cyclictest hwlatdetect oslat rtla stress-ng dpdk-testpmd
 
 # Default target
 .DEFAULT_GOAL := help
@@ -30,6 +30,17 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # Build targets for individual images
+.PHONY: build-dpdk-testpmd
+build-dpdk-testpmd: ## Build dpdk-testpmd image
+	podman build \
+		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
+		--build-arg VERSION=$(BASE_VERSION) \
+		--build-arg ARCH=$(ARCH) \
+		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
+		-f Dockerfile-dpdk-testpmd \
+		-t $(REGISTRY)/$(ORG)/dpdk-testpmd:$(BASE_VERSION) \
+		.
+
 .PHONY: build-cyclictest
 build-cyclictest: ## Build cyclictest image
 	podman build \
@@ -85,6 +96,10 @@ build-stress-ng: ## Build stress-ng image
 build-all: $(addprefix build-,$(IMAGES)) ## Build all images
 
 # Push targets
+.PHONY: push-dpdk-testpmd
+push-dpdk-testpmd: ## Push dpdk-testpmd image
+	podman push $(REGISTRY)/$(ORG)/dpdk-testpmd:$(BASE_VERSION)
+
 .PHONY: push-cyclictest
 push-cyclictest: ## Push cyclictest image
 	podman push $(REGISTRY)/$(ORG)/cyclictest:$(BASE_VERSION)
@@ -111,6 +126,7 @@ push-all: $(addprefix push-,$(IMAGES)) ## Push all images
 # Utility targets
 .PHONY: clean
 clean: ## Clean up images
+	podman rmi $(REGISTRY)/$(ORG)/dpdk-testpmd:$(BASE_VERSION) || true
 	podman rmi $(REGISTRY)/$(ORG)/cyclictest:$(BASE_VERSION) || true
 	podman rmi $(REGISTRY)/$(ORG)/hwlatdetect:$(BASE_VERSION) || true
 	podman rmi $(REGISTRY)/$(ORG)/oslat:$(BASE_VERSION) || true
@@ -137,12 +153,14 @@ build-multiarch: ## Build for multiple architectures and create manifest
 		podman build --platform linux/amd64 \
 			--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 			--build-arg VERSION=$(BASE_VERSION) \
+			--build-arg ARCH=x86_64 \
 			--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
 			-f Dockerfile-$$image -t $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-amd64 .; \
 		echo "  Building arm64..."; \
 		podman build --platform linux/arm64 \
 			--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 			--build-arg VERSION=$(BASE_VERSION) \
+			--build-arg ARCH=aarch64 \
 			--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
 			-f Dockerfile-$$image -t $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-arm64 .; \
 		echo "  Creating manifest for $$image..."; \
