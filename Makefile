@@ -28,97 +28,37 @@ help: ## Show this help message
 	@echo ""
 	@echo "Available targets:"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo "Single image build targets:"
+	@for img in $(IMAGES); do \
+		printf "  build-%-15s Build image $$img\n" $$img; \
+	done
+	@echo "Single image push targets:"
+	@for img in $(IMAGES); do \
+		printf "  push-%-15s Push image $$img\n" $$img; \
+	done
 
 # Build targets for individual images
-.PHONY: build-dpdk-testpmd
-build-dpdk-testpmd: ## Build dpdk-testpmd image
-	podman build \
+.PHONY: build-%
+build-%: ## Build a specific image by name
+	@echo "Building $*..."
+	@podman build \
 		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 		--build-arg VERSION=$(BASE_VERSION) \
 		--build-arg ARCH=$(ARCH) \
 		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-		-f Dockerfile-dpdk-testpmd \
-		-t $(REGISTRY)/$(ORG)/dpdk-testpmd:$(BASE_VERSION) \
-		.
-
-.PHONY: build-cyclictest
-build-cyclictest: ## Build cyclictest image
-	podman build \
-		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
-		--build-arg VERSION=$(BASE_VERSION) \
-		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-		-f Dockerfile-cyclictest \
-		-t $(REGISTRY)/$(ORG)/cyclictest:$(BASE_VERSION) \
-		.
-
-.PHONY: build-hwlatdetect
-build-hwlatdetect: ## Build hwlatdetect image
-	podman build \
-		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
-		--build-arg VERSION=$(BASE_VERSION) \
-		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-		-f Dockerfile-hwlatdetect \
-		-t $(REGISTRY)/$(ORG)/hwlatdetect:$(BASE_VERSION) \
-		.
-
-.PHONY: build-oslat
-build-oslat: ## Build oslat image
-	podman build \
-		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
-		--build-arg VERSION=$(BASE_VERSION) \
-		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-		-f Dockerfile-oslat \
-		-t $(REGISTRY)/$(ORG)/oslat:$(BASE_VERSION) \
-		.
-
-.PHONY: build-rtla
-build-rtla: ## Build rtla image
-	podman build \
-		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
-		--build-arg VERSION=$(BASE_VERSION) \
-		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-		-f Dockerfile-rtla \
-		-t $(REGISTRY)/$(ORG)/rtla:$(BASE_VERSION) \
-		.
-
-.PHONY: build-stress-ng
-build-stress-ng: ## Build stress-ng image
-	podman build \
-		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
-		--build-arg VERSION=$(BASE_VERSION) \
-		--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-		-f Dockerfile-stress-ng \
-		-t $(REGISTRY)/$(ORG)/stress-ng:$(BASE_VERSION) \
+		-f $*/Dockerfile \
+		-t $(REGISTRY)/$(ORG)/$*:$(BASE_VERSION) \
 		.
 
 # Build all images
 .PHONY: build-all
 build-all: $(addprefix build-,$(IMAGES)) ## Build all images
 
-# Push targets
-.PHONY: push-dpdk-testpmd
-push-dpdk-testpmd: ## Push dpdk-testpmd image
-	podman push $(REGISTRY)/$(ORG)/dpdk-testpmd:$(BASE_VERSION)
-
-.PHONY: push-cyclictest
-push-cyclictest: ## Push cyclictest image
-	podman push $(REGISTRY)/$(ORG)/cyclictest:$(BASE_VERSION)
-
-.PHONY: push-hwlatdetect
-push-hwlatdetect: ## Push hwlatdetect image
-	podman push $(REGISTRY)/$(ORG)/hwlatdetect:$(BASE_VERSION)
-
-.PHONY: push-oslat
-push-oslat: ## Push oslat image
-	podman push $(REGISTRY)/$(ORG)/oslat:$(BASE_VERSION)
-
-.PHONY: push-rtla
-push-rtla: ## Push rtla image
-	podman push $(REGISTRY)/$(ORG)/rtla:$(BASE_VERSION)
-
-.PHONY: push-stress-ng
-push-stress-ng: ## Push stress-ng image
-	podman push $(REGISTRY)/$(ORG)/stress-ng:$(BASE_VERSION)
+# Push targets for individual images
+.PHONY: push-%
+push-%: ## Push a specific image by name
+	@echo "Pushing $*..."
+	@podman push $(REGISTRY)/$(ORG)/$*:$(BASE_VERSION)
 
 .PHONY: push-all
 push-all: $(addprefix push-,$(IMAGES)) ## Push all images
