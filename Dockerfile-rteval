@@ -1,0 +1,13 @@
+# Based on centos:stream9 as per your requirement
+FROM centos:stream9
+USER root
+COPY rteval/cmd.sh /root
+COPY common-libs /root/common-libs
+RUN yum install --enablerepo=rt rteval trace-cmd procps-ng -y \
+    && yum clean all && rm -rf /var/cache/yum \
+    && curl -L -o /root/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 \
+    && chmod 777 /root/dumb-init \
+    && chmod 777 /root/cmd.sh
+WORKDIR /root
+ENTRYPOINT ["/root/dumb-init", "--"]
+CMD ["/root/cmd.sh"]
