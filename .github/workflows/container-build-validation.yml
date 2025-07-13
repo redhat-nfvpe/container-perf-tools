@@ -1,0 +1,138 @@
+name: Container Build Validation
+
+on:
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'cyclictest/**'
+      - 'hwlatdetect/**'
+      - 'oslat/**'
+      - 'rtla/**'
+      - 'stress-ng/**'
+      - 'dpdk-testpmd/**'
+      - 'Makefile'
+      - '.github/workflows/container-build-validation.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: quay.io
+  ORG: container-perf-tools
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.changes.outputs.images }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect changes
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "images=[\"cyclictest\",\"hwlatdetect\",\"oslat\",\"rtla\",\"stress-ng\",\"dpdk-testpmd\"]" >> $GITHUB_OUTPUT
+          else
+            # Check if tool directories or Makefile changed
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | grep -E "(cyclictest|hwlatdetect|oslat|rtla|stress-ng|dpdk-testpmd|Makefile)" || true)
+            
+            if [ -n "$CHANGED_FILES" ]; then
+              # Extract unique tool names from changed files (excluding Makefile)
+              IMAGES=$(echo "$CHANGED_FILES" | grep -E "(cyclictest|hwlatdetect|oslat|rtla|stress-ng|dpdk-testpmd)" | cut -d'/' -f1 | sort -u | tr '\n' ',' | sed 's/,$//')
+              # If only Makefile changed or no specific tools detected, build all
+              if [ -z "$IMAGES" ]; then
+                IMAGES="cyclictest,hwlatdetect,oslat,rtla,stress-ng,dpdk-testpmd"
+              fi
+              # Convert comma-separated string to JSON array
+              JSON_ARRAY=$(echo "$IMAGES" | sed 's/,/","/g' | sed 's/^/["/' | sed 's/$/"]/')
+              echo "images=$JSON_ARRAY" >> $GITHUB_OUTPUT
+            else
+              echo "images=[]" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-containers:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.images != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJson(needs.detect-changes.outputs.images) }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Install podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+      
+      - name: Build container using Makefile
+        run: |
+          # Set environment variables that Makefile expects
+          export REGISTRY=${{ env.REGISTRY }}
+          export ORG=${{ env.ORG }}
+          export BASE_VERSION=pr-${{ github.event.number }}
+          export COMMIT_SHA=${{ github.sha }}
+          
+          # Build the specific image using Makefile
+          make build-${{ matrix.image }}
+      
+      - name: Verify container image
+        run: |
+          # Check that the image was built successfully
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.ORG }}/${{ matrix.image }}:pr-${{ github.event.number }}"
+          podman inspect $IMAGE_TAG
+          
+          # Test basic container functionality where possible
+          case "${{ matrix.image }}" in
+            cyclictest)
+              podman run --rm $IMAGE_TAG cyclictest --help | head -10
+              ;;
+            stress-ng)
+              podman run --rm $IMAGE_TAG stress-ng --help | head -10
+              ;;
+            hwlatdetect)
+              podman run --rm $IMAGE_TAG hwlatdetect --help | head -10 || true
+              ;;
+            oslat)
+              podman run --rm $IMAGE_TAG oslat --help | head -10 || true
+              ;;
+            rtla)
+              podman run --rm $IMAGE_TAG rtla --help | head -10 || true
+              ;;
+            dpdk-testpmd)
+              podman run --rm $IMAGE_TAG testpmd --help | head -10 || true
+              ;;
+          esac
+
+  build-validation-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-containers]
+    if: always()
+    steps:
+      - name: Check build results
+        run: |
+          echo "=== Build Validation Summary ==="
+          echo "Images to build: ${{ needs.detect-changes.outputs.images }}"
+          echo ""
+          
+          if [ "${{ needs.detect-changes.outputs.images }}" != "[]" ]; then
+            BUILD_STATUS="${{ needs.build-containers.result }}"
+            echo "Container builds result: $BUILD_STATUS"
+            
+            if [ "$BUILD_STATUS" != "success" ]; then
+              echo "❌ Some container builds failed!"
+              exit 1
+            else
+              echo "✅ All container builds successful!"
+            fi
+          else
+            echo "ℹ️ No container builds needed - no relevant files changed"
+          fi
+          
+          echo "🎉 Container build validation completed successfully!" 

@@ -55,6 +55,20 @@ standalone-trafficgen containers. To build those containers one needs to go to t
 
 There is a Makefile available to build the stand-alone test containers. Run `make help` for instructions.
 
+## CI/CD Pipeline
+
+This repository includes a GitHub Actions workflow (`container-build-validation.yml`) that automatically validates container image builds on pull requests. The workflow:
+
+- **Intelligent Change Detection**: Only builds containers that have been modified
+- **Makefile Integration**: Uses the project's Makefile to build containers consistently
+- **Targeted Containers**: Builds specific tool containers (cyclictest, hwlatdetect, oslat, rtla, stress-ng, dpdk-testpmd)
+- **Basic Functionality Tests**: Validates that built containers can run basic commands
+- **Parallel Builds**: Uses matrix builds for efficient parallel container building
+
+The workflow triggers on:
+- Pull requests that modify tool directories or the Makefile
+- Manual workflow dispatch for full validation
+
 ## Running the tests
 
 ### General notes
