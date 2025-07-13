@@ -32,7 +32,7 @@ jobs:
         id: changes
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "images=cyclictest,hwlatdetect,oslat,rtla,stress-ng,dpdk-testpmd" >> $GITHUB_OUTPUT
+            echo "images=[\"cyclictest\",\"hwlatdetect\",\"oslat\",\"rtla\",\"stress-ng\",\"dpdk-testpmd\"]" >> $GITHUB_OUTPUT
           else
             # Check if tool directories or Makefile changed
             CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | grep -E "(cyclictest|hwlatdetect|oslat|rtla|stress-ng|dpdk-testpmd|Makefile)" || true)
@@ -44,20 +44,22 @@ jobs:
               if [ -z "$IMAGES" ]; then
                 IMAGES="cyclictest,hwlatdetect,oslat,rtla,stress-ng,dpdk-testpmd"
               fi
-              echo "images=$IMAGES" >> $GITHUB_OUTPUT
+              # Convert comma-separated string to JSON array
+              JSON_ARRAY=$(echo "$IMAGES" | sed 's/,/","/g' | sed 's/^/["/' | sed 's/$/"]/')
+              echo "images=$JSON_ARRAY" >> $GITHUB_OUTPUT
             else
-              echo "images=" >> $GITHUB_OUTPUT
+              echo "images=[]" >> $GITHUB_OUTPUT
             fi
           fi
 
   build-containers:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.images != ''
+    if: needs.detect-changes.outputs.images != '[]'
     strategy:
       fail-fast: false
       matrix:
-        image: ${{ fromJson(format('["{0}"]', needs.detect-changes.outputs.images) | replace(',', '","')) }}
+        image: ${{ fromJson(needs.detect-changes.outputs.images) }}
     steps:
       - uses: actions/checkout@v4
       
@@ -119,7 +121,7 @@ jobs:
           echo "Images to build: ${{ needs.detect-changes.outputs.images }}"
           echo ""
           
-          if [ "${{ needs.detect-changes.outputs.images }}" != "" ]; then
+          if [ "${{ needs.detect-changes.outputs.images }}" != "[]" ]; then
             BUILD_STATUS="${{ needs.build-containers.result }}"
             echo "Container builds result: $BUILD_STATUS"
             
