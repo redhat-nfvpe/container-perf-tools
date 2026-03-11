@@ -24,6 +24,9 @@ bin/
 !*akefile
 !*ockerfile*
 
+# Unignore CODEOWNERS
+!CODEOWNERS
+
 # Ignore files with extension `.class` & `.sm` & `.bak`
 *.class
 *.sm
@@ -37,5 +40,7 @@ bin/
 #relative/path/to/dir/anotherfile
 */__pycache__/
 
-# VS Code files and directories
+# IDE and tool settings
 .vscode/
+.cursor/
+.claude/
