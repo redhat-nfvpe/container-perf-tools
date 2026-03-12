@@ -38,7 +38,7 @@ to all tools when run from the all-in-one test container. The second type is too
 name/value pairs under the container env spec.
 
 The common env variables include:
-+ tool: which performance test to run, essentially it is one of the tool directory names
++ tool: which performance test to run, essentially it is one of the tool directory names (e.g. cyclictest, oslat)
 
 The tool specific variables will be mentioned under each tool section.
 
@@ -205,7 +205,6 @@ export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
 envsubst < pod-uperf-master.yaml | oc create -f -
 ```
 uperf supports the following environment variables:
-+ tool: uperf, run this uperf tool
 + uperfSlave: the ip address of the worker pod
 + size: the tcp write buffer size
 + threads: number of threads 
@@ -227,7 +226,6 @@ oslat supports the following environment variables:
 cyclictest is used to evaluate the real time kernel scheduler latency. 
 
 cyclictest supports the following environment variables:
-+ tool: cyclictest, run this cyclictest tool
 + DURATION: how long the cyclictest will be run, default: 24 hours
 + INTERVAL: set cyclictest -i parameter, default 1000
 + stress: choice of false/stress-ng
@@ -241,7 +239,6 @@ cyclictest supports the following environment variables:
 stress-ng is used to load and stress cpus
 
 stress-ng supports the following environment variables:
-+ tool: stress-ng, run this stress-ng tool
 + DURATION: how long the stress-ng will be run, default: 24 hours
 + CPU_METHOD: specify a cpu stress method, default: matrixprod
 + CPU_LOAD: load each CPU with P percent loading, default: 100
@@ -255,7 +252,6 @@ sysjitter is used to evaluate the system scheduler jitter. This test in certain 
 throughput for high speed network.
 
 sysjitter supports the following environment variables:
-+ tool: sysjitter, run this sysjitter tool
 + RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
 + THRESHOLD_NS: default 200 ns
 + DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs sysjitter will have workload balance disabled
@@ -271,7 +267,6 @@ in each direction. In general, testpmd forwarding is assumed not to be a bottlen
 throughput test.
 
 testpmd supports the following environment variables:
-+ tool: testpmd, run this testpmd tool
 + ring_size: ring buffer size, default 2048
 + manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
 
@@ -286,7 +281,6 @@ for next iteration based on the packet loss ratio at last iteration until it fin
 packet loss ratio meets the expectation.
 
 This tool supports the following environment variables:
-+ tool: trafficgen, run this trafficgen tool
 + pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
 + validation_seconds: The final validation test duration, default 30 seconds
 + search_seconds: The test duration for each search iteration, default 10 seconds
@@ -310,7 +304,6 @@ For more information, refer to the [standalone-trafficgen directory](https://git
 hwlatdetect is used to detect large system latencies induced by the hardware or firmware.
 
 hwlatdetect supports the following environment variables:
-+ tool: hwlatdetect, run the hwlatdetect tool
 + RUNTIME_SECONDS: how long the test will be run, default: 10 seconds
 + delay: specify how many seconds to delay before test start; default 0
 + THRESHOLD: only record hardware latencies above THRESHOLD (in usec); no default
@@ -322,7 +315,6 @@ timerlat is used to find sources of wakeup latencies of real-time threads. It is
 cause of any unexpected latencies.
 
 timerlat supports the following environment variables:
-+ tool: rtla
 + COMMMAND: timerlat
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
@@ -341,7 +333,6 @@ osnoise is used to find sources of operating system noise. It is run with the rt
 cause of any unexpected latencies.
 
 osnoise supports the following environment variables:
-+ tool: rtla
 + COMMMAND: osnoise
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
@@ -360,7 +351,6 @@ hwnoise is used to find sources of operating system noise with interrupts disabl
 tool that analyzes the cause of any unexpected latencies.
 
 hwnoise supports the following environment variables:
-+ tool: rtla
 + COMMMAND: hwnoise
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
