@@ -7,6 +7,15 @@ ARCH := $(shell uname -m)
 BASE_VERSION ?= latest
 VERSION := $(BASE_VERSION)-$(ARCH)
 
+# Map architecture to platform
+ifeq ($(ARCH),x86_64)
+PLATFORM := linux/amd64
+else ifeq ($(ARCH),aarch64)
+PLATFORM := linux/arm64
+else
+PLATFORM := linux/$(ARCH)
+endif
+
 # All container images (default to all)
 IMAGES ?= cyclictest hwlatdetect oslat rtla stress-ng dpdk-testpmd
 
@@ -20,6 +29,7 @@ help: ## Show this help message
 	@echo ""
 	@echo "Current configuration:"
 	@echo "  Architecture: $(ARCH)"
+	@echo "  Platform: $(PLATFORM)"
 	@echo "  Base Version: $(BASE_VERSION)"
 	@echo "  Full Version: $(VERSION)"
 	@echo "  Registry: $(REGISTRY)"
@@ -41,7 +51,8 @@ help: ## Show this help message
 .PHONY: build-%
 build-%: ## Build a specific image by name
 	@echo "Building $*..."
-	@podman build \
+	podman build \
+		--platform $(PLATFORM) \
 		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 		--build-arg VERSION=$(BASE_VERSION) \
 		--build-arg ARCH=$(ARCH) \
@@ -58,7 +69,7 @@ build-all: $(addprefix build-,$(IMAGES)) ## Build all images
 .PHONY: push-%
 push-%: ## Push a specific image by name
 	@echo "Pushing $*..."
-	@podman push $(REGISTRY)/$(ORG)/$*:$(BASE_VERSION)
+	podman push $(REGISTRY)/$(ORG)/$*:$(BASE_VERSION)
 
 .PHONY: push-all
 push-all: $(addprefix push-,$(IMAGES)) ## Push all images
@@ -66,13 +77,9 @@ push-all: $(addprefix push-,$(IMAGES)) ## Push all images
 # Utility targets
 .PHONY: clean
 clean: ## Clean up images
-	podman rmi $(REGISTRY)/$(ORG)/dpdk-testpmd:$(BASE_VERSION) || true
-	podman rmi $(REGISTRY)/$(ORG)/cyclictest:$(BASE_VERSION) || true
-	podman rmi $(REGISTRY)/$(ORG)/hwlatdetect:$(BASE_VERSION) || true
-	podman rmi $(REGISTRY)/$(ORG)/oslat:$(BASE_VERSION) || true
-	podman rmi $(REGISTRY)/$(ORG)/rtla:$(BASE_VERSION) || true
-	podman rmi $(REGISTRY)/$(ORG)/stress-ng:$(BASE_VERSION) || true
-	podman rmi $(REGISTRY)/$(ORG)/container-perf-tools:$(BASE_VERSION) || true
+	@for image in $(IMAGES); do \
+		podman rmi -i $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION); \
+	done
 
 .PHONY: clean-all
 clean-all: clean ## Clean up all images and dangling images
@@ -82,6 +89,7 @@ clean-all: clean ## Clean up all images and dangling images
 .PHONY: show-arch
 show-arch: ## Show current architecture
 	@echo "Current architecture: $(ARCH)"
+	@echo "Platform: $(PLATFORM)"
 	@echo "Full version tag: $(VERSION)"
 
 .PHONY: build-multiarch
@@ -95,14 +103,14 @@ build-multiarch: ## Build for multiple architectures and create manifest
 			--build-arg VERSION=$(BASE_VERSION) \
 			--build-arg ARCH=x86_64 \
 			--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-			-f Dockerfile-$$image -t $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-amd64 .; \
+			-f $$image/Dockerfile -t $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-amd64 .; \
 		echo "  Building arm64..."; \
 		podman build --platform linux/arm64 \
 			--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 			--build-arg VERSION=$(BASE_VERSION) \
 			--build-arg ARCH=aarch64 \
 			--build-arg BUILD_DATE=$(shell date -u +'%Y-%m-%dT%H:%M:%SZ') \
-			-f Dockerfile-$$image -t $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-arm64 .; \
+			-f $$image/Dockerfile -t $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-arm64 .; \
 		echo "  Creating manifest for $$image..."; \
 		podman manifest create $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION); \
 		podman manifest add $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION) $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-amd64; \
@@ -121,7 +129,7 @@ push-multiarch: ## Push multi-architecture manifests (including images)
 clean-multiarch: ## Clean up multi-architecture podman images
 	@for image in $(IMAGES); do \
 		echo "Removing $$image amd64 and arm64 images..."; \
-		podman rmi $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-amd64; \
-		podman rmi $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-arm64; \
-		podman rmi $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION); \
+		podman rmi -i $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-amd64; \
+		podman rmi -i $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION)-arm64; \
+		podman manifest rm -i $(REGISTRY)/$(ORG)/$$image:$(BASE_VERSION); \
 	done

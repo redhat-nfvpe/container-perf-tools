@@ -2,7 +2,8 @@
 
 # env vars:
 #   RUNTIME_SECONDS (default 10)
-#   PRIO (RT priority, default 1)
+#   PRIO (RT priority, default 1, only valid when USE_DEFAULT_SCHED is not set)
+#   USE_DEFAULT_SCHED (default 'n', choice y/n, use default scheduling class instead of SCHED_FIFO)
 #   manual (default 'n', choice y/n, don't run test - for debug purposes)
 #   delay   (default 0, specify how many second to delay before test start)
 #   TRACE_THRESHOLD (no default, stop the oslat test when threshold triggered (in usec))
@@ -22,8 +23,6 @@ echo "/proc/cmdline:"
 cat /proc/cmdline
 echo "#####################################"
 
-
-PRIO=${PRIO:-1}
 
 uname=`uname -nr`
 echo "$uname"
@@ -63,7 +62,16 @@ if [ -n "$TRACE_THRESHOLD" ]; then
         extra_args="--trace-threshold=$TRACE_THRESHOLD"
 fi
 
-command="oslat -D ${RUNTIME_SECONDS} --rtprio ${PRIO} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]} ${extra_args} ${EXTRA_ARGS}"
+prio_args=""
+if [ "${USE_DEFAULT_SCHED:-n}" == "y" ]; then
+        if [ -n "$PRIO" ]; then
+                echo "WARNING: PRIO is ignored when USE_DEFAULT_SCHED=y"
+        fi
+else
+        prio_args="--rtprio ${PRIO:-1}"
+fi
+
+command="oslat -D ${RUNTIME_SECONDS} ${prio_args} --cpu-list ${cyccore} --cpu-main-thread ${cpus[0]} ${extra_args} ${EXTRA_ARGS}"
 
 echo "cmd to run: ${command}"
 

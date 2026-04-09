@@ -215,7 +215,8 @@ oslat is a userspace polling mode stress program to detect OS level latency.
 
 oslat supports the following environment variables:
 + RUNTIME_SECONDS: test duration in seconds; default 10
-+ PRIO: RT priority used for the test threads; default 1
++ PRIO: RT priority used for the test threads; default 1; only valid when USE_DEFAULT_SCHED is not set
++ USE_DEFAULT_SCHED: choice of y/n; if set to y, use the default scheduling class instead of SCHED_FIFO; default n
 + manual: choice of y/n; if enabled, don't kick off oslat, this is for debug purpose
 + delay: specify how many second to delay before test start; default 0
 + TRACE_THRESHOLD: stop the oslat test when threshold triggered (in usec); no default
