@@ -20,7 +20,7 @@ without rebuilding the container image.
 
 For the all-in-one container, it's expected each tool will be located in its own directory with name cmd.sh. For example 
 under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with 
-cmd.sh under that directory. The tool script should expect its arguments/options via enviroment variables.
+cmd.sh under that directory. The tool script should expect its arguments/options via environment variables.
 
 The run.sh under the repo root directory is the entrance for the container image. Once it is started, it will execute the
 specified tool based on the yaml specification, with the environment variables in the yaml file. The yaml examples for k8s
@@ -33,7 +33,7 @@ Build the all-in-one container image:
 
 ### common yaml variables for the all-in-one test container
 
-All the test scripts use enviroment variables as input. There are two types of variables, the first type is common 
+All the test scripts use environment variables as input. There are two types of variables, the first type is common
 to all tools when run from the all-in-one test container. The second type is tool specific. Both are defined as
 name/value pairs under the container env spec.
 
@@ -286,7 +286,7 @@ This tool supports the following environment variables:
 + validation_seconds: The final validation test duration, default 30 seconds
 + search_seconds: The test duration for each search iteration, default 10 seconds
 + sniff_seconds: The initial test duration before binary search begins, default 10 seconds
-+ loss_ratio: Expected packet loss ration percentile, default 0.002
++ loss_ratio: Expected packet loss ratio percentile, default 0.002
 + flows: Number of flows, default 1
 + frame_size: The packet frame size (layer 2 frame), default 64 bytes
 
@@ -316,7 +316,7 @@ timerlat is used to find sources of wakeup latencies of real-time threads. It is
 cause of any unexpected latencies.
 
 timerlat supports the following environment variables:
-+ COMMMAND: timerlat
++ COMMAND: timerlat
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
 + MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
@@ -334,7 +334,7 @@ osnoise is used to find sources of operating system noise. It is run with the rt
 cause of any unexpected latencies.
 
 osnoise supports the following environment variables:
-+ COMMMAND: osnoise
++ COMMAND: osnoise
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
 + MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
@@ -352,7 +352,7 @@ hwnoise is used to find sources of operating system noise with interrupts disabl
 tool that analyzes the cause of any unexpected latencies.
 
 hwnoise supports the following environment variables:
-+ COMMMAND: hwnoise
++ COMMAND: hwnoise
 + DURATION: how long the test will be run, default: 24 hours
 + DELAY: specify how many seconds to delay before test start; default 0
 + MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
