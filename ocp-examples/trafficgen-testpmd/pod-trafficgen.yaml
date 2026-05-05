@@ -10,7 +10,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: trafficgen
-    image: quay.io/jianzzha/trafficgen
+    image: quay.io/container-perf-tools/trafficgen
     imagePullPolicy: IfNotPresent
     args: ["/root/trafficgen_entry.sh", "server"] 
     ports:

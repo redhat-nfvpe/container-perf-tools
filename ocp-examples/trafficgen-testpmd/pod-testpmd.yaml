@@ -10,7 +10,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: testpmd
-    image: quay.io/jianzzha/testpmd 
+    image: quay.io/container-perf-tools/testpmd
     imagePullPolicy: IfNotPresent
     #args: ["/root/testpmd-wrapper", "-queues", "2"]
     ports:

@@ -8,7 +8,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: testpmd 
-    image: quay.io/jianzzha/perf-tools 
+    image: quay.io/container-perf-tools/all-in-one
     imagePullPolicy: IfNotPresent
     env:
     - name: tool

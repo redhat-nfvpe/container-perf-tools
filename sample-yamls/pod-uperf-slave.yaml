@@ -6,7 +6,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: uperf-master
-    image: quay.io/jianzzha/perf-tools 
+    image: quay.io/container-perf-tools/all-in-one
     imagePullPolicy: IfNotPresent
     ports:
     - containerPort: 20000

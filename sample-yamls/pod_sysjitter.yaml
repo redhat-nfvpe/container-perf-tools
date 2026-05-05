@@ -11,7 +11,7 @@ spec:
   restartPolicy: Never 
   containers:
   - name: container-perf-tools 
-    image: quay.io/jianzzha/perf-tools
+    image: quay.io/container-perf-tools/all-in-one
     imagePullPolicy: IfNotPresent
     env:
     - name: tool
