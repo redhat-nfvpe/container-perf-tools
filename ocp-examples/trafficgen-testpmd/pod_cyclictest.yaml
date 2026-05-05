@@ -11,7 +11,7 @@ spec:
   restartPolicy: Never
   containers:
   - name: container-perf-tools 
-    image: quay.io/jianzzha/cyclictest 
+    image: quay.io/container-perf-tools/cyclictest
     imagePullPolicy: Always 
     resources:
       limits:
