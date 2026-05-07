@@ -46,10 +46,8 @@ The tool specific variables will be mentioned under each tool section.
 
 ### Directory layout
 
-Each test tool can also be built as a standalone test container (versus included in the all-in-one container). Some of the
-dockerfiles can be found under the root directory, such as Dockerfile-cyclictest and Dockerfile-oslat. Other standalone test
-containers may have their dockerfiles located in the individual sub directories, such as the standalone-testpmd and
-standalone-trafficgen containers. To build those containers one needs to go to the individual directory and run podman build.
+Each test tool can also be built as a standalone test container (versus included in the all-in-one container).
+Each tool has a Dockerfile in its own subdirectory (e.g. cyclictest/Dockerfile, oslat/Dockerfile).
 
 ### Building the container
 
