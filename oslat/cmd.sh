@@ -31,7 +31,7 @@ rpm -q realtime-tests
 cpulist=`get_allowed_cpuset`
 echo "allowed cpu list: ${cpulist}"
 
-# change list seperators from comma to new line and sort it 
+# change list separators from comma to new line and sort it
 cpulist=`convert_number_range ${cpulist} | tr , '\n' | sort -n | uniq`
 
 declare -a cpus
