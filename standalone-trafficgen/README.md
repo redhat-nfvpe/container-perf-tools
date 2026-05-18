@@ -1,9 +1,9 @@
 
-# Stand-alone-trafficgen 
+# Stand-alone-trafficgen
 
 Trafficgen with binary search capability is commonly used in end-to-end NFV performance test.
-It makes sense to have the trafficgen seperated from the common tool set container and have its own 
-container image. This allows us to quickly add new capabilities to the trafficgen without 
+It makes sense to have the trafficgen seperated from the common tool set container and have its own
+container image. This allows us to quickly add new capabilities to the trafficgen without
 worrying the update impact to other tools in the common tool set container.
 
 So for the trafficgen, there are too choices,
@@ -38,7 +38,7 @@ ice.pkg
 How to install the DDP packet can be found in Intel's E810 DDP package release note.
 
 The trex version also make a different on E810. With the 2.88 trex version, the E810 PF works but VF does not; with 3.02 trex version, the E810 VF works but PF does not. This is unfortunate, one may have to rebuild the trafficgen container image based on the use case.
- 
+
 ## Podman run example for automation
 
 ```
@@ -62,11 +62,11 @@ To get the mac address of trafficgen test ports,
 
 ## trafficgen client in other languages
 
-The trafficgen and client is programmed with Python. The trafficgen provides gRPC 
-interface so other programming languages can be used to control the trafficgen 
+The trafficgen and client is programmed with Python. The trafficgen provides gRPC
+interface so other programming languages can be used to control the trafficgen
 over gRPC.
 
-The protocol buffer is defined in rpc.proto. When there is an update to this file, to 
+The protocol buffer is defined in rpc.proto. When there is an update to this file, to
 re-generate python code,
 `python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. rpc.proto`
 

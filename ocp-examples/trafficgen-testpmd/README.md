@@ -5,9 +5,9 @@ OCP enviroment
 
 ## Setup performance and SRIOV setting via operators
 
-The performance addon operator can provision the OCP cluster for performance tuning. The 
-SRIOV operator will setup the virtual functrions on the worker nodes. The steps to 
-run these operators are described in the setup.sh file in this folder. The required 
+The performance addon operator can provision the OCP cluster for performance tuning. The
+SRIOV operator will setup the virtual functrions on the worker nodes. The steps to
+run these operators are described in the setup.sh file in this folder. The required
 yaml files are in this folder as well, one can simply run,
 ```
 ./setup.sh
@@ -41,7 +41,7 @@ This should return the mac address used by the testpmd.
 
 ```
 oc create -f pod-trafficgen.yaml
-``` 
+```
 
 Once the pod is running, to watch the trafficgen log,
 ```
