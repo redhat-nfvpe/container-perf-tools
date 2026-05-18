@@ -15,7 +15,7 @@ There are two ways to use these tools:
 
 The Dockerfile file under the root directory defines the all-in-one container.
 
-The all-in-one container is constructed in such a way that the tester has the flexiblity to customize a tool execution 
+The all-in-one container is constructed in such a way that the tester has the flexibility to customize a tool execution 
 without rebuilding the container image. 
 
 For the all-in-one container, it's expected each tool will be located in its own directory with name cmd.sh. For example 
@@ -280,7 +280,7 @@ for next iteration based on the packet loss ratio at last iteration until it fin
 packet loss ratio meets the expectation.
 
 This tool supports the following environment variables:
-+ pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
++ pci_list: A comma-separated data port pci address list, for example 0000:03:00.0,0000:03:00.1
 + validation_seconds: The final validation test duration, default 30 seconds
 + search_seconds: The test duration for each search iteration, default 10 seconds
 + sniff_seconds: The initial test duration before binary search begins, default 10 seconds
