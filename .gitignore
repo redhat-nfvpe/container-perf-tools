@@ -27,11 +27,12 @@ bin/
 # Unignore CODEOWNERS
 !CODEOWNERS
 
-# Ignore files with extension `.class` & `.sm` & `.bak`
+# Ignore temporary files
 *.class
 *.sm
 *.swp
 *.bak
+*.log
 
 # Ignore a file with extension
 #relative/path/to/dir/filename.extension
