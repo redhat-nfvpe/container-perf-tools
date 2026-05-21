@@ -2,8 +2,8 @@
 # Stand-alone-testpmd
 
 Testpmd is commonly used in DPDK performance test.
-It makes sense to have the testpmd seperated from the common tool set container and have its own 
-container image. This allows us to quickly add new capabilities to the testpmd without 
+It makes sense to have the testpmd seperated from the common tool set container and have its own
+container image. This allows us to quickly add new capabilities to the testpmd without
 worrying the update impact to other tools in the common tool set container.
 
 ## Prerequisites:
@@ -19,13 +19,13 @@ worrying the update impact to other tools in the common tool set container.
 
 ## Podman run example
 
-### start testpmd server 
+### start testpmd server
 
 `podman run -it --rm --privileged -p 9000:9000 -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 5,7,9,11 docker.io/cscojianzhan/testpmd /root/testpmd-wrapper -pci 86:00:0 -pci 86:00:1`
 
 ### control testpmd from a client
 
-The sample client can be used to control the testpmd. The client can be on the same machine as the testpmd server or remotely. 
+The sample client can be used to control the testpmd. The client can be on the same machine as the testpmd server or remotely.
 If running the client remotely, option -server is used to specify the testpmd server address, -grpc-port is used to specify
 the server grpc port (by default 9000 is used).
 
@@ -43,11 +43,11 @@ To list the testpmd ports ,
 
 ## testpmd client in other languages
 
-The testpmd server and client is programmed with golang. The testpmd server provides gRPC 
-interface so other programming languages can be used to control the testpmd 
+The testpmd server and client is programmed with golang. The testpmd server provides gRPC
+interface so other programming languages can be used to control the testpmd
 over gRPC.
 
-The protocol buffer is defined in rpc.proto. When there is an update to this file, to 
+The protocol buffer is defined in rpc.proto. When there is an update to this file, to
 re-generate golang code,
 `cd rpc; protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative rpc.proto`
 

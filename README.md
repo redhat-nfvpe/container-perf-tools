@@ -1,8 +1,8 @@
 
 # container-perf-tools
 
-This project contains a set of containerized performance test tools that can be used in Kubernetes environment to 
-evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency, 
+This project contains a set of containerized performance test tools that can be used in Kubernetes environment to
+evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency,
 etc.
 
 There are two ways to use these tools:
@@ -15,11 +15,11 @@ There are two ways to use these tools:
 
 The Dockerfile file under the root directory defines the all-in-one container.
 
-The all-in-one container is constructed in such a way that the tester has the flexiblity to customize a tool execution 
-without rebuilding the container image. 
+The all-in-one container is constructed in such a way that the tester has the flexibility to customize a tool execution
+without rebuilding the container image.
 
-For the all-in-one container, it's expected each tool will be located in its own directory with name cmd.sh. For example 
-under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with 
+For the all-in-one container, it's expected each tool will be located in its own directory with name cmd.sh. For example
+under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with
 cmd.sh under that directory. The tool script should expect its arguments/options via environment variables.
 
 The run.sh under the repo root directory is the entrance for the container image. Once it is started, it will execute the
@@ -89,8 +89,8 @@ files for each test can be found under the sample-yamls directory. Some examples
 
 By default, these yaml files point to the pre-built stand-alone container images under the [container-perf-tools](https://quay.io/organization/container-perf-tools) organization on quay.io.
 
-When the test is complete, to get the test result, use "oc logs" or "kubectl logs" command to examine the 
-container log. Currently there is a work in progress to kick off the test and present the test result via 
+When the test is complete, to get the test result, use "oc logs" or "kubectl logs" command to examine the
+container log. Currently there is a work in progress to kick off the test and present the test result via
 rest API.
 
 ### Running from podman
@@ -179,11 +179,11 @@ Test completed.
 
 ## Test Configuration
 
-### uperf test 
+### uperf test
 
-uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means 
+uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means
 the worker needs to be started first. The ip address of the slave will be entered as input value for env
-variable "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the 
+variable "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the
 "uperfSlave" value and this is to make the automation easier, for example the worker and master can be started like this,
 ```
 #!/usr/bin/bash
@@ -205,7 +205,7 @@ envsubst < pod-uperf-master.yaml | oc create -f -
 uperf supports the following environment variables:
 + uperfSlave: the ip address of the worker pod
 + size: the tcp write buffer size
-+ threads: number of threads 
++ threads: number of threads
 
 ### oslat test
 
@@ -222,7 +222,7 @@ oslat supports the following environment variables:
 
 ### cyclictest test
 
-cyclictest is used to evaluate the real time kernel scheduler latency. 
+cyclictest is used to evaluate the real time kernel scheduler latency.
 
 cyclictest supports the following environment variables:
 + DURATION: how long the cyclictest will be run, default: 24 hours
@@ -247,7 +247,7 @@ stress-ng supports the following environment variables:
 
 ### sysjitter test
 
-sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss 
+sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss
 throughput for high speed network.
 
 sysjitter supports the following environment variables:
@@ -259,28 +259,28 @@ sysjitter supports the following environment variables:
 
 ### testpmd test
 
-testpmd is used to evaluate the system networking performance. The container expects two data ports (other than 
-the default interface) and wires the two ports together via dpdk handling. For higher performance, the testpmd 
+testpmd is used to evaluate the system networking performance. The container expects two data ports (other than
+the default interface) and wires the two ports together via dpdk handling. For higher performance, the testpmd
 runs in io mode and it doesn't examine the packets and simply forwards packets from one port to another port,
-in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end 
+in each direction. In general, testpmd forwarding is assumed not to be a bottleneck for the end to end
 throughput test.
 
 testpmd supports the following environment variables:
 + ring_size: ring buffer size, default 2048
-+ manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose 
++ manual: choice of y/n; if enabled, don't kick off testpmd, this is for debug purpose
 
 For more information, refer to the [standalone-testpmd directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-testpmd)
 
 ### trafficgen test
 
-trafficgen is used to perform a binary search and find the maximum sustainable throughput. This tool expects 
-two data ports (other than the default interface) and sends the traffic out of one port and expects the traffic 
-received on the other port and vice versa. It begins at line rate and automatically adjust the traffic rate 
-for next iteration based on the packet loss ratio at last iteration until it finds a traffic rate this has 
+trafficgen is used to perform a binary search and find the maximum sustainable throughput. This tool expects
+two data ports (other than the default interface) and sends the traffic out of one port and expects the traffic
+received on the other port and vice versa. It begins at line rate and automatically adjust the traffic rate
+for next iteration based on the packet loss ratio at last iteration until it finds a traffic rate this has
 packet loss ratio meets the expectation.
 
 This tool supports the following environment variables:
-+ pci_list: A comma-seperated data port pci address list, for example 0000:03:00.0,0000:03:00.1
++ pci_list: A comma-separated data port pci address list, for example 0000:03:00.0,0000:03:00.1
 + validation_seconds: The final validation test duration, default 30 seconds
 + search_seconds: The test duration for each search iteration, default 10 seconds
 + sniff_seconds: The initial test duration before binary search begins, default 10 seconds
@@ -319,7 +319,7 @@ timerlat supports the following environment variables:
 + DELAY: specify how many seconds to delay before test start; default 0
 + MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
 + AA_THRESHOLD: sets automatic trace mode stopping the session if latency in us is hit and generates a trace. A value of 0 disables this feature; default 20
-+ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list. 
++ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list.
 + EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
 + CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
 + CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
@@ -337,7 +337,7 @@ osnoise supports the following environment variables:
 + DELAY: specify how many seconds to delay before test start; default 0
 + MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
 + AA_THRESHOLD: sets automatic trace mode stopping the session if latency in us is hit and generates a trace. A value of 0 disables this feature; default 20
-+ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list. 
++ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list.
 + EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
 + CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
 + CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
@@ -355,7 +355,7 @@ hwnoise supports the following environment variables:
 + DELAY: specify how many seconds to delay before test start; default 0
 + MAX_LATENCY: stop detection if the thread latency is higher than MAX_LATENCY (in usec); default 0
 + AA_THRESHOLD: sets automatic trace mode stopping the session if latency in us is hit and generates a trace. A value of 0 disables this feature; default 20
-+ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list. 
++ EVENTS: Allows specifying multiple trace events. Default is blank. This should be provided as a comma separated list.
 + EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
 + CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
 + CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
