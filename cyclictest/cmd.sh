@@ -95,6 +95,7 @@ if [[ "${sibling}" =~ ^[0-9]+$ ]]; then
     cyccore=${cyccore//,$sibling/}
     ccount=$(($ccount - 1))
 fi
+cyccore=$(compact_ranges "$cyccore")
 echo "new cpu list: ${cyccore}"
 
 if [[ -n "${TRACE_THRESHOLD}" ]]; then
