@@ -17,6 +17,29 @@ function convert_number_range() {
 }
 
 
+function compact_ranges() {
+	# [ "$(compact_ranges "1,3,2,0,5,6,7")" = "0-3,5-7" ]
+	local cpus_list=$(convert_number_range "$1")
+	local res=""
+	local start="" prev=""
+	for cpu in $(echo "$cpus_list" | tr ',' '\n' | sort -nu); do
+		if [ ! "$start" ]; then
+			start=$cpu
+		elif [ $cpu -ne $((prev + 1)) ]; then
+			res+=",$start"
+			[ "$start" -ne "$prev" ] && res+="-$prev"
+			start=$cpu
+		fi
+		prev=$cpu
+	done
+	if [ "$start" ]; then
+		res+=",$start"
+		[ "$start" -ne "$prev" ] && res+="-$prev"
+	fi
+	echo "${res#,}"
+}
+
+
 function get_allowed_cpuset() {
 	local cpuset=`cat /proc/self/status | grep Cpus_allowed_list: | cut -f 2`
 	echo ${cpuset}

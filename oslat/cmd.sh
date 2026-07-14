@@ -55,6 +55,7 @@ if [[ "${sibling}" =~ ^[0-9]+$ ]]; then
         echo "removing cpu${sibling} from the cpu list because it is a sibling of cpu${cpus[0]} which will be the cpu-main-thread"
         cyccore=${cyccore//,$sibling/}
 fi
+cyccore=$(compact_ranges "$cyccore")
 echo "new cpu list: ${cyccore}"
 
 extra_args=""

@@ -156,6 +156,7 @@ if [[ "${sibling}" =~ ^[0-9]+$ ]]; then
     log_echo "removing cpu${sibling} from the cpu list because it is a sibling of cpu${cpus[0]} which will be the cpu-main-thread"
     cyccore=${cyccore//,$sibling/}
 fi
+cyccore=$(compact_ranges "$cyccore")
 log_echo "new cpu list: ${cyccore}"
 
 if [ ${COMMAND} == "timerlat" ] || [ ${COMMAND} == "osnoise" ]; then

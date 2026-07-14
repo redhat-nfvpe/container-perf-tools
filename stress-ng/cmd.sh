@@ -62,6 +62,7 @@ if [[ -z "${CMDLINE}" ]]; then
         ccount=$(($ccount + 1))
     done
 
+    newcpulist=$(compact_ranges "$newcpulist")
     echo "cpu list: ${newcpulist}"
 
     command="stress-ng -t ${DURATION} --cpu ${ccount} --taskset ${newcpulist} --cpu-method ${CPU_METHOD} --cpu-load ${CPU_LOAD} --metrics-brief ${EXTRA_ARGS}"
