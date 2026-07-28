@@ -6,6 +6,7 @@
 #   CPU_LOAD (default "100")
 #   EXTRA_ARGS (default "", will be passed directly to stress-ng command)
 #   CMDLINE (default "", the full set of options passed to stress-ng command, overrides all other options)
+#   PAUSE (default 'y', choice y/n, pause after run)
 
 source common-libs/functions.sh
 
@@ -76,8 +77,11 @@ echo "running cmd: ${command}"
 
 if [ "${manual:-n}" == "n" ]; then
     $command
+    rc=$?
 else
     sleep infinity
 fi
 
-sleep infinity
+[[ "${PAUSE:-y}" == "y" ]] && sleep infinity
+
+exit $rc

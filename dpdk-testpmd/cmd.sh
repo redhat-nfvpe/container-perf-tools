@@ -5,6 +5,7 @@
 #	manual    (default n, choices y/n)
 #	peer_mac_west peer_mac_east (optional), use mac forward mode if provided; otherwise io mode
 #	queues (default 1)
+#	PAUSE (default 'y', choice y/n, pause after run)
 
 source common-libs/functions.sh
 
@@ -152,7 +153,7 @@ else
 	tmux new-session -s testpmd -d "${testpmd_cmd}"
 fi
 
-sleep infinity
+[[ "${PAUSE:-y}" == "y" ]] && sleep infinity
 tmux kill-session -t testpmd
 sleep 1
 bind_driver ${vf_driver}

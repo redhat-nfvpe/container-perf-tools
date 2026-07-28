@@ -219,6 +219,7 @@ oslat supports the following environment variables:
 + delay: specify how many second to delay before test start; default 0
 + TRACE_THRESHOLD: stop the oslat test when threshold triggered (in usec); no default
 + EXTRA_ARGS (default "", will be passed directly to oslat command)
++ PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 
 ### cyclictest test
 
@@ -232,6 +233,7 @@ cyclictest supports the following environment variables:
 + delay: specify how many seconds to delay before test start; default 0
 + TRACE_THRESHOLD: stop the cyclictest when threshold triggered (in usec); no default
 + EXTRA_ARGS (default "", will be passed directly to cyclictest command)
++ PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 
 ### stress-ng test
 
@@ -243,6 +245,7 @@ stress-ng supports the following environment variables:
 + CPU_LOAD: load each CPU with P percent loading, default: 100
 + EXTRA_ARGS (default "", will be passed directly to stress-ng command)
 + CMDLINE (default "", the full set of options passed to stress-ng command, overrides all other options)
++ PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 
 
 ### sysjitter test

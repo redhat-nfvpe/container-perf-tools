@@ -9,6 +9,7 @@
 #   TRACE_THRESHOLD: stop cyclictest when threshold triggered (in usec); no default
 #   EXTRA_ARGS (default "", will be passed directly to cyclictest command)
 #   manual (default 'n', choice y/n, don't run test - for debug purposes)
+#   PAUSE (default 'y', choice y/n, pause after run)
 
 source common-libs/functions.sh
 
@@ -111,11 +112,14 @@ if [ "${manual:-n}" == "n" ]; then
         sleep ${delay}
     fi
     $command
+    rc=$?
 else
     sleep infinity
 fi
 
-# kill stress before exit 
+# kill stress before exit
 tmux kill-session -t stress 2>/dev/null
 
-sleep infinity
+[[ "${PAUSE:-y}" == "y" ]] && sleep infinity
+
+exit $rc
