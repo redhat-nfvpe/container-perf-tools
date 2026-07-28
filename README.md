@@ -323,7 +323,7 @@ timerlat supports the following environment variables:
 + EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
 + CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
 + CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
-+ PAUSE: pauses after run. choices y/n; default: y
++ PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 + EXTRA_ARGS (default "", will be passed directly to timerlat command)
 
 ### osnoise test
@@ -341,7 +341,7 @@ osnoise supports the following environment variables:
 + EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
 + CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
 + CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
-+ PAUSE: pauses after run. choices y/n; default: y
++ PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 + EXTRA_ARGS (default "", will be passed directly to osnoise command)
 
 ### hwnoise test
@@ -359,5 +359,5 @@ hwnoise supports the following environment variables:
 + EVENTS_TRIGGER: Optional. Specifies the condition for the event trigger. Note: Currently only works on the last event in the list
 + CHECK_US: Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'. Note: Host kernel must support this.
 + CGROUPS: If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'. Note: Host kernel must support this.
-+ PAUSE: pauses after run. choices y/n; default: y
++ PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 + EXTRA_ARGS (default "", will be passed directly to hwnoise command)
