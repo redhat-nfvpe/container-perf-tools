@@ -46,7 +46,7 @@ if [ -n "${pci_list}" ]; then
 fi
     
 if [[ -z "${pci_west}" || -z "${pci_east}" ]]; then
-	echo "Coudln't get assigned pci slot info from enviroment vars starting with PCIDEVICE"
+	echo "Couldn't get assigned pci slot info from environment vars starting with PCIDEVICE"
         exit 1
 fi
 
