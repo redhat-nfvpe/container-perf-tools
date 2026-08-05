@@ -5,53 +5,9 @@ This project contains a set of containerized performance test tools that can be 
 evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency,
 etc.
 
-There are two ways to use these tools:
-+ all-in-one test container - A single container that includes all test tools
-+ standalone test containers - A separate container for each test tool
-
-## All-in-one test container
-
-### Directory layout
-
-The Dockerfile file under the root directory defines the all-in-one container.
-
-The all-in-one container is constructed in such a way that the tester has the flexibility to customize a tool execution
-without rebuilding the container image.
-
-For the all-in-one container, it's expected each tool will be located in its own directory with name cmd.sh. For example
-under directory cyclictest, the cmd.sh is the entrance for cyclictest. For testpmd there will be a directory testpmd with
-cmd.sh under that directory. The tool script should expect its arguments/options via environment variables.
-
-The run.sh under the repo root directory is the entrance for the container image. Once it is started, it will execute the
-specified tool based on the yaml specification, with the environment variables in the yaml file. The yaml examples for k8s
-(OpenShift) can be found under the sample-yamls/ directory
-
-### Building the container
-
-Build the all-in-one container image:
-`podman build -t <your repo tag> -f Dockerfile .`
-
-### common yaml variables for the all-in-one test container
-
-All the test scripts use environment variables as input. There are two types of variables, the first type is common
-to all tools when run from the all-in-one test container. The second type is tool specific. Both are defined as
-name/value pairs under the container env spec.
-
-The common env variables include:
-+ tool: which performance test to run, essentially it is one of the tool directory names (e.g. cyclictest, oslat)
-
-The tool specific variables will be mentioned under each tool section.
-
-## Stand-alone test containers
-
-### Directory layout
-
-Each test tool can also be built as a standalone test container (versus included in the all-in-one container).
 Each tool has a Dockerfile in its own subdirectory (e.g. cyclictest/Dockerfile, oslat/Dockerfile).
 
-### Building the container
-
-There is a Makefile available to build the stand-alone test containers. Run `make help` for instructions.
+There is a Makefile available to build the containers. Run `make help` for instructions.
 
 ## CI/CD Pipeline
 
@@ -71,13 +27,8 @@ The workflow triggers on:
 
 ### General notes
 
-There are two types of container tool use cases. The first type is to run the performance tool as container
-image in a Kubernetes cluster and the performance tool will collect and report performance metrics of the
-underlying system; this type includes sysjitter, cyclictest, and uperf. The second type lives outside Kubernetes
-cluster and is used externally to evaluate the Kubernetes cluster; this type includes trex trafficgen. Sometimes
-we need to use these two types together to evaluate the system; for example, to evaluate the SRIOV throughput, we
-can run a DPDK testpmd container inside Kubernetes cluster, and outside the cluster use trex trafficgen
-container to do binary search in order to evaluate the highest throughput supported by the SRIOV ports.
+The performance tools run as container images in a Kubernetes cluster and
+collect and report performance metrics of the underlying system.
 
 ### Running as pods
 
@@ -179,34 +130,6 @@ Test completed.
 
 ## Test Configuration
 
-### uperf test
-
-uperf test involves two containers, a master and a worker. The master needs to know the ip address of the worker. This means
-the worker needs to be started first. The ip address of the slave will be entered as input value for env
-variable "uperfSlave" in the master yaml file. In sample-yamls/pod-uperf-master.yaml, a variable is used as the
-"uperfSlave" value and this is to make the automation easier, for example the worker and master can be started like this,
-```
-#!/usr/bin/bash
-if ! oc get pod uperf-slave 1>&2 2>/dev/null; then
-	oc create -f pod-uperf-slave.yaml
-fi
-oc delete pod uperf-master 2>/dev/null
-
-while true; do
-	status=$(oc get pods uperf-slave -o json | jq -r '.status.phase')
-	if [[ "${status}" == "Running" ]]; then
-		break
-	fi
-	sleep 5s
-done
-export slave=$(oc get pods uperf-slave -o json | jq -r '.status.podIP')
-envsubst < pod-uperf-master.yaml | oc create -f -
-```
-uperf supports the following environment variables:
-+ uperfSlave: the ip address of the worker pod
-+ size: the tcp write buffer size
-+ threads: number of threads
-
 ### oslat test
 
 oslat is a userspace polling mode stress program to detect OS level latency.
@@ -245,18 +168,6 @@ stress-ng supports the following environment variables:
 + CMDLINE (default "", the full set of options passed to stress-ng command, overrides all other options)
 
 
-### sysjitter test
-
-sysjitter is used to evaluate the system scheduler jitter. This test in certain way can predict the zero loss
-throughput for high speed network.
-
-sysjitter supports the following environment variables:
-+ RUNTIME_SECONDS: how many seconds to run the sysjitter test, default 10 seconds
-+ THRESHOLD_NS: default 200 ns
-+ DISABLE_CPU_BALANCE: choice of y/n; if enabled, the cpu that runs sysjitter will have workload balance disabled
-+ USE_TASKSET: choice of y/n; if enabled, use taskset to pin the task cpu
-+ manual: choice of y/n; if enabled, don't kick off sysjitter, this is for debug purpose
-
 ### testpmd test
 
 testpmd is used to evaluate the system networking performance. The container expects two data ports (other than
@@ -292,9 +203,6 @@ Prerequisites:
 + 2MB or 1GB huge pages
 + Isolated CPU for better performance
 + Example kargs: `default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt isolcpus=4-11`
-
-Podman run example:
-`podman run -it --rm --privileged  -v /sys:/sys -v /dev:/dev -v /lib/modules:/lib/modules --cpuset-cpus 4-11 -e tool=trafficgen -e pci_list=0000:03:00.0,0000:03:00.1  -e validation_seconds=10 quay.io/container-perf-tools/trafficgen`
 
 For more information, refer to the [standalone-trafficgen directory](https://github.com/redhat-nfvpe/container-perf-tools/tree/master/standalone-trafficgen)
 
