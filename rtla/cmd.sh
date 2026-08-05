@@ -12,6 +12,8 @@
 #   CHECK_US (Allows RTLA to also check for userspace induced latency. Options are 'y' or 'n'. Default is 'n'.)
 #   CGROUPS (If set to 'y', it places the rtla kthreads in the same cgroup as the userspace threads. Default is 'n'. Choices are 'y' or 'n'.
 #   EXTRA_ARGS (Allows specifying custom options. Default is blank. Provide as a space separated list of options.)
+#
+# Exit code: propagates rtla return code
 
 source common-libs/functions.sh
 
@@ -244,6 +246,7 @@ if [[ "${DELAY}" != "0" ]]; then
 fi
 
 output=$(eval "$formatted_command")
+rc=$?
 log_echo "$output"
 
 # Right now hwnoise saves its trace as osnoise
@@ -279,3 +282,5 @@ if [[ "$PAUSE" == "y" ]]; then
     log_echo "=================================================="
     sleep infinity
 fi
+
+exit $rc
