@@ -5,7 +5,8 @@
 #   manual (default 'n', choice y/n, don't run test - for debug purposes)
 #   delay   (default 0, specify how many second to delay before test start)
 #   THRESHOLD (no default, only record hardware latencies above THRESHOLD (in usec))
-#   EXTRA_ARGS (default "", will be passed directly to oslat command)
+#   EXTRA_ARGS (default "", will be passed directly to hwlatdetect command)
+#   PAUSE (default 'y', choice y/n, pause after run)
 
 source common-libs/functions.sh
 
@@ -48,5 +49,8 @@ if [ "${delay:-0}" != "0" ]; then
 fi
 
 $command
+rc=$?
 
-sleep infinity
+[[ "${PAUSE:-y}" == "y" ]] && sleep infinity
+
+exit $rc

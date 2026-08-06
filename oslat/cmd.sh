@@ -8,6 +8,7 @@
 #   delay   (default 0, specify how many second to delay before test start)
 #   TRACE_THRESHOLD (no default, stop the oslat test when threshold triggered (in usec))
 #   EXTRA_ARGS (default "", will be passed directly to oslat command)
+#   PAUSE (default 'y', choice y/n, pause after run)
 
 source common-libs/functions.sh
 
@@ -86,5 +87,8 @@ if [ "${delay:-0}" != "0" ]; then
 fi
 
 $command
+rc=$?
 
-sleep infinity
+[[ "${PAUSE:-y}" == "y" ]] && sleep infinity
+
+exit $rc
