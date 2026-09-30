@@ -5,6 +5,7 @@
 #   manual (default 'n', choice y/n, don't run test - for debug purposes)
 #   delay   (default 0, specify how many second to delay before test start)
 #   THRESHOLD (no default, only record hardware latencies above THRESHOLD (in usec))
+#   ALL_CPUS (default 'n', choice y/n, test all possible CPUs)
 #   EXTRA_ARGS (default "", will be passed directly to hwlatdetect command)
 #   PAUSE (default 'y', choice y/n, pause after run)
 
@@ -34,6 +35,17 @@ extra_args=""
 if [ -n "$THRESHOLD" ]; then
     extra_args="--threshold=$THRESHOLD"
 fi
+
+if [ "${ALL_CPUS:-n}" == "y" ]; then
+    cpulist=$(cat /sys/devices/system/cpu/possible) || exit 1
+else
+    cpulist=$(get_allowed_cpuset)
+    if [ -z "$cpulist" ]; then
+        echo >&2 "Unable to determine CPU list. Aborting"
+        exit 1
+    fi
+fi
+extra_args+=" --cpu-list ${cpulist}"
 
 command="hwlatdetect --duration ${RUNTIME_SECONDS} ${extra_args} --watch ${EXTRA_ARGS}"
 
