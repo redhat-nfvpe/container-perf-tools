@@ -74,3 +74,17 @@ function enable_balance()
 		done
 	done
 }
+
+function cpulist_to_mask() {
+	python3 - "$1" <<'PY'
+import sys
+
+cpus = sys.argv[1]
+mask = sum(1 << cpu for span in cpus.split(',')
+           for cpu in range(int(span.split('-')[0]),
+                            int(span.split('-')[-1]) + 1))
+digits = f'{mask:x}'
+print(','.join(reversed([digits[max(i - 8, 0):i]
+                         for i in range(len(digits), 0, -8)])))
+PY
+}
