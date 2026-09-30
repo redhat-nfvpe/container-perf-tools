@@ -1,4 +1,4 @@
-FROM fedora:42
+FROM fedora:43
 
 # Build arguments
 ARG COMMIT_SHA=unknown

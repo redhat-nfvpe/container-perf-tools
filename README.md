@@ -217,6 +217,7 @@ hwlatdetect supports the following environment variables:
 + RUNTIME_SECONDS: how long the test will be run, default: 10 seconds
 + delay: specify how many seconds to delay before test start; default 0
 + THRESHOLD: only record hardware latencies above THRESHOLD (in usec); no default
++ ALL_CPUS: y omits --cpu-list; default n uses pod CPUs
 + EXTRA_ARGS (default "", will be passed directly to hwlatdetect command)
 + PAUSE: pauses after run. choices y/n; default: y. With PAUSE=n, the pod exits with the tool's return code
 
