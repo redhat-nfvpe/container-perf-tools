@@ -5,13 +5,17 @@ This project contains a set of containerized performance test tools that can be 
 evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency,
 etc.
 
+## Building
+
 Each tool has a Dockerfile in its own subdirectory (e.g. cyclictest/Dockerfile, oslat/Dockerfile).
 
 There is a Makefile available to build the containers. Run `make help` for instructions.
 
-## CI/CD Pipeline
+### CI/CD Pipeline
 
-This repository includes a GitHub Actions workflow (`container-build-validation.yml`) that automatically validates container image builds on pull requests. The workflow:
+This repository includes a GitHub Actions workflow
+([`container-build-validation.yml`](.github/workflows/container-build-validation.yml))
+that automatically validates container image builds on pull requests. The workflow:
 
 - **Intelligent Change Detection**: Only builds containers that have been modified
 - **Makefile Integration**: Uses the project's Makefile to build containers consistently
