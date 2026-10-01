@@ -1,5 +1,5 @@
 
-# container-perf-tools
+# Latency and Performance Testing Tools for OpenShift
 
 This project contains a set of containerized performance test tools that can be used in Kubernetes environment to
 evaluate performance related to data plane, such as dpdk enabled network throughput, real time kernel latency,
