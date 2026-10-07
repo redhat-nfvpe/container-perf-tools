@@ -52,6 +52,7 @@ help: ## Show this help message
 build-%: ## Build a specific image by name
 	@echo "Building $*..."
 	podman build \
+		--quiet \
 		--platform $(PLATFORM) \
 		--build-arg COMMIT_SHA=$(COMMIT_SHA) \
 		--build-arg VERSION=$(BASE_VERSION) \
@@ -69,7 +70,7 @@ build-all: $(addprefix build-,$(IMAGES)) ## Build all images
 .PHONY: push-%
 push-%: ## Push a specific image by name
 	@echo "Pushing $*..."
-	podman push $(REGISTRY)/$(ORG)/$*:$(BASE_VERSION)
+	podman push --quiet $(REGISTRY)/$(ORG)/$*:$(BASE_VERSION)
 
 .PHONY: push-all
 push-all: $(addprefix push-,$(IMAGES)) ## Push all images
