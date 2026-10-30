@@ -35,11 +35,12 @@ jobs:
             echo "images=[\"cyclictest\",\"hwlatdetect\",\"oslat\",\"rtla\",\"stress-ng\",\"dpdk-testpmd\"]" >> $GITHUB_OUTPUT
           else
             # Check if tool directories or Makefile changed
-            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | grep -E "(cyclictest|hwlatdetect|oslat|rtla|stress-ng|dpdk-testpmd|Makefile)" || true)
+            image_dirs='cyclictest|hwlatdetect|oslat|rtla|stress-ng|dpdk-testpmd'
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | grep -E "^($image_dirs)/|^Makefile$" || true)
             
             if [ -n "$CHANGED_FILES" ]; then
               # Extract unique tool names from changed files (excluding Makefile)
-              IMAGES=$(echo "$CHANGED_FILES" | grep -E "(cyclictest|hwlatdetect|oslat|rtla|stress-ng|dpdk-testpmd)" | cut -d'/' -f1 | sort -u | tr '\n' ',' | sed 's/,$//')
+              IMAGES=$(echo "$CHANGED_FILES" | grep -E "^($image_dirs)/" | cut -d'/' -f1 | sort -u | tr '\n' ',' | sed 's/,$//')
               # If only Makefile changed or no specific tools detected, build all
               if [ -z "$IMAGES" ]; then
                 IMAGES="cyclictest,hwlatdetect,oslat,rtla,stress-ng,dpdk-testpmd"
@@ -135,4 +136,4 @@ jobs:
             echo "ℹ️ No container builds needed - no relevant files changed"
           fi
           
-          echo "🎉 Container build validation completed successfully!" 
+          echo "🎉 Container build validation completed successfully!"
